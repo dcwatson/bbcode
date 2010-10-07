@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+import re
+
+# Taken from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
+_url_re = re.compile( r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?]))', re.MULTILINE )
+
 class TagOptions (object):
 	
 	tag_name = None
@@ -20,10 +25,28 @@ class Parser (object):
 	TOKEN_NEWLINE = 3
 	TOKEN_DATA = 4
 	
-	def __init__( self, newline='<br />', normalize_newlines=True, install_defaults=True ):
+	REPLACE_ESCAPE = (
+		('<', '&lt;'),
+		('>', '&gt;'),
+		('&', '&amp;'),
+	)
+	
+	REPLACE_COSMETIC = (
+		('--', '&ndash;'),
+		('---', '&mdash;'),
+		('...', '&#8230;'),
+		('(c)', '&copy;'),
+		('(reg)', '&reg;'),
+		('(tm)', '&trade;'),
+	)
+	
+	def __init__( self, newline='<br />', normalize_newlines=True, install_defaults=True, escape=True, prettify=True, linkify=True ):
 		self.newline = newline
 		self.normalize_newlines = normalize_newlines
 		self.recognized_tags = {}
+		self.escape = escape
+		self.prettify = prettify
+		self.linkify = linkify
 		if install_defaults:
 			self.install_default_formatters()
 	
@@ -158,6 +181,12 @@ class Parser (object):
 	def tokenize( self, data ):
 		if self.normalize_newlines:
 			data = data.replace( '\r\n', '\n' ).replace( '\r', '\n' )
+		if self.escape:
+			for find, repl in self.REPLACE_ESCAPE:
+				data = data.replace( find, repl )
+		if self.prettify:
+			for find, repl in self.REPLACE_COSMETIC:
+				data = data.replace( find, repl )
 		pos = 0
 		start = 0
 		end = 0
@@ -234,8 +263,10 @@ class Parser (object):
 					end = self._find_closing_token( tag, tokens, idx+1 )
 					subtokens = tokens[idx+1:end]
 					if tag.render_embedded:
+						# This tag renders embedded tags, simply recurse.
 						inner = self._format_tokens( subtokens, context, parent=tag )
 					else:
+						# Otherwise, just concatenate all the token text.
 						if tag.transform_newlines:
 							inner = ''.join( [t[3] if t[0] != self.TOKEN_NEWLINE else self.newline for t in subtokens] )
 						else:
@@ -253,7 +284,18 @@ class Parser (object):
 		tokens = self.tokenize( data )
 		return self._format_tokens( tokens, context )
 
+g_parser = None
+
+def render_html( input, context=None ):
+	"""
+	A module-level convenience method that creates a default bbcode parser,
+	and renders the input string as HTML.
+	"""
+	global g_parser
+	if g_parser is None:
+		g_parser = Parser()
+	return g_parser.format( input, context )
+
 if __name__ == '__main__':
 	import sys
-	p = Parser()
-	print p.format( sys.stdin.read() )
+	print render_html( sys.stdin.read() )

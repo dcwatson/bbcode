@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from bbcode import Parser
 import unittest
+import bbcode
 
 class ParserTests (unittest.TestCase):
 	
@@ -21,7 +21,7 @@ class ParserTests (unittest.TestCase):
 	)
 	
 	def setUp( self ):
-		self.parser = Parser()
+		self.parser = bbcode.Parser()
 	
 	def test_format( self ):
 		for src, expected in self.TESTS:
