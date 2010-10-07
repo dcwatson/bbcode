@@ -1,22 +1,5 @@
 #!/usr/bin/env python
 
-TESTS = (
-	('[b]hello world[/b]', '<strong>hello world</strong>'),
-	('[b][i]test[/i][/b]', '<strong><em>test</em></strong>'),
-	('[b][i]test[/b][/i]', '<strong><em>test</em></strong>'),
-	('[b]hello [i]world[/i]', '<strong>hello <em>world</em></strong>'),
-	('[tag][soup][/tag]', '[tag][soup][/tag]' ),
-	('[b]hello [ world[/b]', '<strong>hello [ world</strong>' ),
-	('[b]]he[llo [ w]orld[/b]', '<strong>]he[llo [ w]orld</strong>' ),
-	('[b]hello [] world[/b]', '<strong>hello [] world</strong>' ),
-	('[hr][/b]', '<hr />'),
-	('[/asdf]', '[/asdf]'),
-	('[list]\n[*]one\n[*]two\n[/list]', '<ul>\n<li>one</li><li>two</li></ul>'),
-	('[b\n oops [i]i[/i] forgot[/b]', '[b<br /> oops <em>i</em> forgot' ),
-	('[b]over[i]lap[/b]ped[/i]', '<strong>over<em>lap</em></strong>ped'),
-	('[quote author=Dan]hey [b]now[/b][/quote]', '<blockquote>hey <strong>now</strong></blockquote>' ),
-)
-
 class TagOptions (object):
 	
 	tag_name = None
@@ -37,14 +20,51 @@ class Parser (object):
 	TOKEN_NEWLINE = 3
 	TOKEN_DATA = 4
 	
-	def __init__( self, newline='<br />', normalize_newlines=True ):
+	def __init__( self, newline='<br />', normalize_newlines=True, install_defaults=True ):
 		self.newline = newline
 		self.normalize_newlines = normalize_newlines
 		self.recognized_tags = {}
+		if install_defaults:
+			self.install_default_formatters()
 	
 	def add_formatter( self, tag_name, render_func, **kwargs ):
+		"""
+		Installs a render function for the specified tag name. The render function
+		should have the following signature:
+		
+			def render( value, options, context, parent ):
+				...
+		
+		The arguments are as follows:
+			
+			value
+				The context between start and end tags, or None for standalone tags.
+				Whether this has been rendered depends on render_embedded tag option.
+			options
+				A dictionary of options specified on the opening tag, or None.
+			context
+				The user-defined context value passed into the format call.
+			parent
+				The parent TagOptions, if the tag is being rendered inside another tag,
+				otherwise None.
+		"""
 		options = TagOptions( tag_name.strip().lower(), **kwargs )
 		self.recognized_tags[options.tag_name] = (render_func, options)
+	
+	def add_simple_formatter( self, tag_name, format, **kwargs ):
+		def _render( value, options, context, parent ):
+			fmt = {}
+			if options:
+				fmt.update( options )
+			fmt.update( {'value': value} )
+			return format % fmt
+		self.add_formatter( tag_name, _render, **kwargs )
+	
+	def install_default_formatters( self ):
+		self.add_simple_formatter( 'b', '<strong>%(value)s</strong>' )
+		self.add_simple_formatter( 'i', '<em>%(value)s</em>' )
+		self.add_simple_formatter( 'list', '<ul>%(value)s</ul>', transform_newlines=False )
+		self.add_simple_formatter( '*', '<li>%(value)s</li>', newline_closes=True )
 	
 	def _newline_tokenize( self, data ):
 		"""
@@ -234,27 +254,6 @@ class Parser (object):
 		return self._format_tokens( tokens, context )
 
 if __name__ == '__main__':
+	import sys
 	p = Parser()
-	p.add_formatter( 'b', lambda value, opts, c, p: '<strong>%s</strong>' % value )
-	p.add_formatter( 'i', lambda value, opts, c, p: '<em>%s</em>' % value )
-	p.add_formatter( 'issue', lambda value, opts, c, p: '<a href="/%s/">%s</a>' % (value, value) )
-	p.add_formatter( 'quote', lambda value, opts, c, p: '<blockquote>%s</blockquote>' % value )
-	p.add_formatter( 'code', lambda value, opts, c, p: '<code>%s</code>' % value, render_embedded=False, transform_newlines=False )
-	p.add_formatter( 'hr', lambda value, opts, c, p: '<hr />', standalone=True )
-	p.add_formatter( 'list', lambda value, opts, c, p: '<ul>%s</ul>' % value, transform_newlines=False )
-	p.add_formatter( '*', lambda value, opts, c, p: '<li>%s</li>' % value, newline_closes=True )
-#	print p._newline_tokenize( '\nhey\n \n\nnow\n\n\n' )
-#	print p._parse_opts( 'quote author="Dan Watson"' )
-#	print p._parse_opts( 'url="http://test.com/s.php?a=bcd efg" popup' )
-#	s = 'hey there\nthis is [b]a test[/b]\n[issue prj=hello]12345[/issue] woop [quote author="Dan Watson"]hey now[/quote]'
-#	print s
-#	print p.tokenize( s )
-#	print p.format( s )
-#	print p.format( '[b]hey [i]there[/i][/b]' )
-	for src, result in TESTS:
-		val = p.format( src )
-		if val != result:
-			print 'FAIL: %s -> %s (expected %s)' % (src, val, result)
-			print p.tokenize( src )
-#	data = open('testfile','rb').read()
-#	print p.format( data )
+	print p.format( sys.stdin.read() )
