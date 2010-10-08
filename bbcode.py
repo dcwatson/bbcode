@@ -12,6 +12,9 @@ class TagOptions (object):
 	standalone = False
 	render_embedded = True
 	transform_newlines = True
+	escape_html = True
+	replace_links = True
+	replace_cosmetic = True
 	
 	def __init__( self, tag_name, **kwargs ):
 		self.tag_name = tag_name
@@ -40,13 +43,16 @@ class Parser (object):
 		('(tm)', '&trade;'),
 	)
 	
-	def __init__( self, newline='<br />', normalize_newlines=True, install_defaults=True, escape=True, prettify=True, linkify=True ):
+	def __init__( self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True, \
+					replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']' ):
+		self.tag_opener = tag_opener
+		self.tag_closer = tag_closer
 		self.newline = newline
 		self.normalize_newlines = normalize_newlines
 		self.recognized_tags = {}
-		self.escape = escape
-		self.prettify = prettify
-		self.linkify = linkify
+		self.escape_html = escape_html
+		self.replace_cosmetic = replace_cosmetic
+		self.replace_links = replace_links
 		if install_defaults:
 			self.install_default_formatters()
 	
@@ -88,6 +94,12 @@ class Parser (object):
 		self.add_simple_formatter( 'i', '<em>%(value)s</em>' )
 		self.add_simple_formatter( 'list', '<ul>%(value)s</ul>', transform_newlines=False )
 		self.add_simple_formatter( '*', '<li>%(value)s</li>', newline_closes=True )
+		self.add_simple_formatter( 'url', '<a href="%(value)s">%(value)s</a>', replace_links=False, replace_cosmetic=False )
+	
+	def _replace( self, data, replacements ):
+		for find, repl in replacements:
+			data = data.replace( find, repl )
+		return data
 	
 	def _newline_tokenize( self, data ):
 		"""
@@ -162,10 +174,10 @@ class Parser (object):
 		parse any options and return a tuple of the form:
 			(valid, tag_name, closer, options)
 		"""
-		if (tag[0] != '[') or (tag[-1] != ']') or ('\n' in tag):
+		if (not tag.startswith(self.tag_opener)) or (not tag.endswith(self.tag_closer)) or ('\n' in tag) or ('\r' in tag):
 			return (False, tag, False, None)
 		# TODO: should [b] == [ b ]?
-		tag_name = tag[1:-1].strip()
+		tag_name = tag[len(self.tag_opener):-len(self.tag_closer)].strip()
 		if not tag_name:
 			return (False, tag, False, None)
 		closer = False
@@ -181,30 +193,24 @@ class Parser (object):
 	def tokenize( self, data ):
 		if self.normalize_newlines:
 			data = data.replace( '\r\n', '\n' ).replace( '\r', '\n' )
-		if self.escape:
-			for find, repl in self.REPLACE_ESCAPE:
-				data = data.replace( find, repl )
-		if self.prettify:
-			for find, repl in self.REPLACE_COSMETIC:
-				data = data.replace( find, repl )
 		pos = 0
 		start = 0
 		end = 0
 		tokens = []
 		while pos < len(data):
-			start = data.find( '[', pos )
+			start = data.find( self.tag_opener, pos )
 			if start >= pos:
 				# Check to see if there was data between this start and the last end.
 				if start > pos:
 					tl = self._newline_tokenize( data[pos:start] )
 					tokens.extend( tl )
-				end = data.find( ']', start )
-				new_check = data.find( '[', start+1 )
+				end = data.find( self.tag_closer, start )
+				new_check = data.find( self.tag_opener, start+len(self.tag_opener) )
 				if new_check > 0 and new_check < end:
 					tokens.extend( self._newline_tokenize(data[start:new_check]) )
 					pos = new_check
 				elif end > start:
-					tag = data[start:end+1]
+					tag = data[start:end+len(self.tag_closer)]
 					valid, tag_name, closer, opts = self._parse_tag( tag )
 					if valid and tag_name in self.recognized_tags:
 						if closer:
@@ -213,7 +219,7 @@ class Parser (object):
 							tokens.append( (self.TOKEN_TAG_START, tag_name, opts, tag) )
 					else:
 						tokens.extend( self._newline_tokenize(tag) )
-					pos = end + 1
+					pos = end + len(self.tag_closer)
 				else:
 					# An unmatched [
 					break
@@ -249,6 +255,15 @@ class Parser (object):
 			pos += 1
 		return pos
 	
+	def _transform( self, data, escape_html, replace_links, replace_cosmetic ):
+		if self.escape_html and escape_html:
+			data = self._replace( data, self.REPLACE_ESCAPE )
+		if self.replace_cosmetic and replace_cosmetic:
+			data = self._replace( data, self.REPLACE_COSMETIC )
+		if self.replace_links and replace_links:
+			data = _url_re.sub( r'<a href="\1">\1</a>', data )
+		return data
+	
 	def _format_tokens( self, tokens, context, parent=None ):
 		idx = 0
 		formatted = ''
@@ -267,16 +282,18 @@ class Parser (object):
 						inner = self._format_tokens( subtokens, context, parent=tag )
 					else:
 						# Otherwise, just concatenate all the token text.
+						inner = self._transform( ''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic )
 						if tag.transform_newlines:
-							inner = ''.join( [t[3] if t[0] != self.TOKEN_NEWLINE else self.newline for t in subtokens] )
-						else:
-							inner = ''.join( [t[3] for t in subtokens] )
+							inner = inner.replace( '\n', self.newline )
 					formatted += render_func( inner, tag_opts, context, parent )
 					idx = end
 			elif token_type == self.TOKEN_NEWLINE:
 				formatted += self.newline if (parent is None or parent.transform_newlines) else token_text
 			elif token_type == self.TOKEN_DATA:
-				formatted += token_text
+				escape = self.escape_html if parent is None else parent.escape_html
+				links = self.replace_links if parent is None else parent.replace_links
+				cosmetic = self.replace_cosmetic if parent is None else parent.replace_cosmetic
+				formatted += self._transform( token_text, escape, links, cosmetic )
 			idx += 1
 		return formatted
 	
