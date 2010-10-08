@@ -35,6 +35,10 @@ class ParserTests (unittest.TestCase):
 		tag_name, opts = self.parser._parse_opts( 'url="http://test.com/s.php?a=bcd efg" popup' )
 		self.assertEqual( tag_name, 'url' )
 		self.assertEqual( opts, {'url': 'http://test.com/s.php?a=bcd efg', 'popup': ''} )
+	
+	def test_strip( self ):
+		result = self.parser.strip( '[b]hello \n[i]world[/i][/b] -- []', strip_newlines=True )
+		self.assertEqual( result, 'hello world -- []' )
 
 if __name__ == '__main__':
 	unittest.main()

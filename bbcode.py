@@ -35,8 +35,8 @@ class Parser (object):
 	)
 	
 	REPLACE_COSMETIC = (
-		('--', '&ndash;'),
 		('---', '&mdash;'),
+		('--', '&ndash;'),
 		('...', '&#8230;'),
 		('(c)', '&copy;'),
 		('(reg)', '&reg;'),
@@ -95,6 +95,7 @@ class Parser (object):
 		self.add_simple_formatter( 'list', '<ul>%(value)s</ul>', transform_newlines=False )
 		self.add_simple_formatter( '*', '<li>%(value)s</li>', newline_closes=True )
 		self.add_simple_formatter( 'url', '<a href="%(value)s">%(value)s</a>', replace_links=False, replace_cosmetic=False )
+		self.add_simple_formatter( 'quote', '<blockquote>%(value)s</blockquote>' )
 	
 	def _replace( self, data, replacements ):
 		"""
@@ -195,11 +196,22 @@ class Parser (object):
 		return (True, tag_name.strip().lower(), closer, opts)
 	
 	def tokenize( self, data ):
+		"""
+		Tokenizes the given string. A token is a 4-tuple of the form:
+			(token_type, tag_name, tag_options, token_text)
+		
+		token_type
+			One of: TOKEN_TAG_START, TOKEN_TAG_END, TOKEN_NEWLINE, TOKEN_DATA
+		tag_name
+			The name of the tag if token_type=TOKEN_TAG_*, otherwise None
+		tag_options
+			A dictionary of options specified for TOKEN_TAG_START, otherwise None
+		token_text
+			The original token text
+		"""
 		if self.normalize_newlines:
 			data = data.replace( '\r\n', '\n' ).replace( '\r', '\n' )
-		pos = 0
-		start = 0
-		end = 0
+		pos = start = end = 0
 		tokens = []
 		while pos < len(data):
 			start = data.find( self.tag_opener, pos )
@@ -276,7 +288,7 @@ class Parser (object):
 	
 	def _format_tokens( self, tokens, context, parent=None ):
 		idx = 0
-		formatted = ''
+		formatted = u''
 		while idx < len(tokens):
 			token_type, tag_name, tag_opts, token_text = tokens[idx]
 			if token_type == self.TOKEN_TAG_START:
@@ -292,7 +304,7 @@ class Parser (object):
 						inner = self._format_tokens( subtokens, context, parent=tag )
 					else:
 						# Otherwise, just concatenate all the token text.
-						inner = self._transform( ''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic )
+						inner = self._transform( u''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic )
 						if tag.transform_newlines:
 							inner = inner.replace( '\n', self.newline )
 					formatted += render_func( inner, tag_opts, context, parent )
@@ -311,6 +323,15 @@ class Parser (object):
 	def format( self, data, context=None ):
 		tokens = self.tokenize( data )
 		return self._format_tokens( tokens, context )
+	
+	def strip( self, data, strip_newlines=False ):
+		text = []
+		for token_type, tag_name, tag_opts, token_text in self.tokenize( data ):
+			if token_type == self.TOKEN_DATA:
+				text.append( token_text )
+			elif token_type == self.TOKEN_NEWLINE and not strip_newlines:
+				text.append( token_text )
+		return u''.join( text )
 
 g_parser = None
 
