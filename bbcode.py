@@ -81,6 +81,10 @@ class Parser (object):
 		self.recognized_tags[options.tag_name] = (render_func, options)
 	
 	def add_simple_formatter( self, tag_name, format, **kwargs ):
+		"""
+		Installs a formatter that takes the tag options dictionary, puts a value key
+		in it, and uses it as a format dictionary to the given format string.
+		"""
 		def _render( value, options, context, parent ):
 			fmt = {}
 			if options:
@@ -92,10 +96,18 @@ class Parser (object):
 	def install_default_formatters( self ):
 		self.add_simple_formatter( 'b', '<strong>%(value)s</strong>' )
 		self.add_simple_formatter( 'i', '<em>%(value)s</em>' )
+		self.add_simple_formatter( 'u', '<u>%(value)s</u>' )
+		self.add_simple_formatter( 's', '<strike>%(value)s</strike>' )
 		self.add_simple_formatter( 'list', '<ul>%(value)s</ul>', transform_newlines=False )
 		self.add_simple_formatter( '*', '<li>%(value)s</li>', newline_closes=True )
-		self.add_simple_formatter( 'url', '<a href="%(value)s">%(value)s</a>', replace_links=False, replace_cosmetic=False )
 		self.add_simple_formatter( 'quote', '<blockquote>%(value)s</blockquote>' )
+		self.add_simple_formatter( 'code', '<code>%(value)s</code>' )
+		self.add_simple_formatter( 'center', '<div style="text-align:center;">%(value)s</div>' )
+		self.add_simple_formatter( 'color', '<span style="color:%(color)s;">%(value)s</span>' )
+		def _render_url( value, options, context, parent ):
+			fmt = (options['url'], value) if (options and 'url' in options) else (value, value)
+			return '<a href="%s">%s</a>' % fmt
+		self.add_formatter( 'url', _render_url, replace_links=False, replace_cosmetic=False )
 	
 	def _replace( self, data, replacements ):
 		"""
@@ -283,6 +295,7 @@ class Parser (object):
 		if self.replace_cosmetic and replace_cosmetic:
 			data = self._replace( data, self.REPLACE_COSMETIC )
 		if self.replace_links and replace_links:
+			# TODO: make this configurable
 			data = _url_re.sub( r'<a href="\1">\1</a>', data )
 		return data
 	
