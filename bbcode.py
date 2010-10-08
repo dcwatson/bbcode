@@ -301,13 +301,13 @@ class Parser (object):
 	
 	def _format_tokens( self, tokens, context, parent=None ):
 		idx = 0
-		formatted = u''
+		formatted = []
 		while idx < len(tokens):
 			token_type, tag_name, tag_opts, token_text = tokens[idx]
 			if token_type == self.TOKEN_TAG_START:
 				render_func, tag = self.recognized_tags[tag_name]
 				if tag.standalone:
-					formatted += render_func( None, tag_opts, context, parent )
+					formatted.append( render_func(None,tag_opts,context,parent) )
 				else:
 					# First, find the extent of this tag's tokens.
 					end = self._find_closing_token( tag, tokens, idx+1 )
@@ -320,18 +320,18 @@ class Parser (object):
 						inner = self._transform( u''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic )
 						if tag.transform_newlines:
 							inner = inner.replace( '\n', self.newline )
-					formatted += render_func( inner, tag_opts, context, parent )
+					formatted.append( render_func(inner,tag_opts,context,parent) )
 					# Skip to the end tag.
 					idx = end
 			elif token_type == self.TOKEN_NEWLINE:
-				formatted += self.newline if (parent is None or parent.transform_newlines) else token_text
+				formatted.append( self.newline if (parent is None or parent.transform_newlines) else token_text )
 			elif token_type == self.TOKEN_DATA:
 				escape = self.escape_html if parent is None else parent.escape_html
 				links = self.replace_links if parent is None else parent.replace_links
 				cosmetic = self.replace_cosmetic if parent is None else parent.replace_cosmetic
-				formatted += self._transform( token_text, escape, links, cosmetic )
+				formatted.append( self._transform(token_text,escape,links,cosmetic) )
 			idx += 1
-		return formatted
+		return u''.join( formatted )
 	
 	def format( self, data, context=None ):
 		tokens = self.tokenize( data )
