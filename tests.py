@@ -18,6 +18,9 @@ class ParserTests (unittest.TestCase):
 		('[list]\n[*]one\n[*]two\n[/list]', '<ul>\n<li>one</li><li>two</li></ul>'),
 		('[b\n oops [i]i[/i] forgot[/b]', '[b<br /> oops <em>i</em> forgot' ),
 		('[b]over[i]lap[/b]ped[/i]', '<strong>over<em>lap</em></strong>ped'),
+		('>> hey -- a dash...', '&gt;&gt; hey &ndash; a dash&#8230;'),
+		('[url]http://foo.com/s.php?some--data[/url]', '<a href="http://foo.com/s.php?some--data">http://foo.com/s.php?some--data</a>'),
+		('www.apple.com blah foo.com/bar', '<a href="www.apple.com">www.apple.com</a> blah <a href="foo.com/bar">foo.com/bar</a>'),
 	)
 	
 	def setUp( self ):

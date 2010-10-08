@@ -29,9 +29,9 @@ class Parser (object):
 	TOKEN_DATA = 4
 	
 	REPLACE_ESCAPE = (
+		('&', '&amp;'),
 		('<', '&lt;'),
 		('>', '&gt;'),
-		('&', '&amp;'),
 	)
 	
 	REPLACE_COSMETIC = (
@@ -97,6 +97,10 @@ class Parser (object):
 		self.add_simple_formatter( 'url', '<a href="%(value)s">%(value)s</a>', replace_links=False, replace_cosmetic=False )
 	
 	def _replace( self, data, replacements ):
+		"""
+		Given a list of 2-tuples (find, repl) this function performs all
+		replacements on the input and returns the result.
+		"""
 		for find, repl in replacements:
 			data = data.replace( find, repl )
 		return data
@@ -205,6 +209,7 @@ class Parser (object):
 					tl = self._newline_tokenize( data[pos:start] )
 					tokens.extend( tl )
 				end = data.find( self.tag_closer, start )
+				# Check to see if another tag opens before this one closes.
 				new_check = data.find( self.tag_opener, start+len(self.tag_opener) )
 				if new_check > 0 and new_check < end:
 					tokens.extend( self._newline_tokenize(data[start:new_check]) )
@@ -212,6 +217,7 @@ class Parser (object):
 				elif end > start:
 					tag = data[start:end+len(self.tag_closer)]
 					valid, tag_name, closer, opts = self._parse_tag( tag )
+					# Make sure this is a well-formed, recognized tag, otherwise it's just data.
 					if valid and tag_name in self.recognized_tags:
 						if closer:
 							tokens.append( (self.TOKEN_TAG_END, tag_name, None, tag) )
@@ -256,6 +262,10 @@ class Parser (object):
 		return pos
 	
 	def _transform( self, data, escape_html, replace_links, replace_cosmetic ):
+		"""
+		Transforms the input string based on the options specified, taking into account
+		whether the option is enabled globally for this parser.
+		"""
 		if self.escape_html and escape_html:
 			data = self._replace( data, self.REPLACE_ESCAPE )
 		if self.replace_cosmetic and replace_cosmetic:
@@ -274,7 +284,7 @@ class Parser (object):
 				if tag.standalone:
 					formatted += render_func( None, tag_opts, context, parent )
 				else:
-					# First, find the extent of this tag's tokens
+					# First, find the extent of this tag's tokens.
 					end = self._find_closing_token( tag, tokens, idx+1 )
 					subtokens = tokens[idx+1:end]
 					if tag.render_embedded:
@@ -286,6 +296,7 @@ class Parser (object):
 						if tag.transform_newlines:
 							inner = inner.replace( '\n', self.newline )
 					formatted += render_func( inner, tag_opts, context, parent )
+					# Skip to the end tag.
 					idx = end
 			elif token_type == self.TOKEN_NEWLINE:
 				formatted += self.newline if (parent is None or parent.transform_newlines) else token_text
