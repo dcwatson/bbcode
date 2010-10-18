@@ -1,0 +1,34 @@
+Advantages Over Postmarkup
+==========================
+
+* More tag options for how/when to escape - for instance, you can specify
+  whether to escape html or perform cosmetic replacements on a tag-by-tag
+  basis. Same for auto-linking and transforming newlines.
+
+* More liberal (and accurate) automatic link creation, using John Gruber's
+  URL regular expression:
+    http://daringfireball.net/2010/07/improved_regex_for_matching_urls
+
+* Does not swallow unrecognized tags. For example, [3] will be output as
+  [3], not silently ignored.
+
+* More flexible tag option parser. Tags may have standard bbcode options,
+  for example [url=something]text[/url], but may also have named options,
+  for example [url=something alt=icon]text[/url]. These options are passed
+  to the render function as a standard python dictionary.
+
+* Ability to specify tag opening and closing delimiters (default: [ and ]).
+  A side benefit of this is being able to use this library to selectively
+  strip HTML tags from a string by using < and >.
+
+* Includes a runnable unittest suite.
+
+Installing Custom Formatters
+============================
+
+Forthcoming.
+
+Writing a Render Function
+=========================
+
+Forthcoming.
