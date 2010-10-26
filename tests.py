@@ -15,7 +15,7 @@ class ParserTests (unittest.TestCase):
 		('[b]]he[llo [ w]orld[/b]', '<strong>]he[llo [ w]orld</strong>' ),
 		('[b]hello [] world[/b]', '<strong>hello [] world</strong>' ),
 		('[/asdf][/b]', '[/asdf]'),
-		('[list]\n[*]one\n[*]two\n[/list]', '<ul>\n<li>one</li><li>two</li></ul>'),
+		('[list]\n[*]one\n[*]two\n[/list]', '<ul><li>one</li><li>two</li></ul>'),
 		('[b\n oops [i]i[/i] forgot[/b]', '[b<br /> oops <em>i</em> forgot' ),
 		('[b]over[i]lap[/b]ped[/i]', '<strong>over<em>lap</em></strong>ped'),
 		('>> hey -- a dash...', '&gt;&gt; hey &ndash; a dash&#8230;'),
@@ -23,6 +23,7 @@ class ParserTests (unittest.TestCase):
 		('[url=apple.com]link[/url]', '<a href="apple.com">link</a>'),
 		('www.apple.com blah foo.com/bar', '<a href="www.apple.com">www.apple.com</a> blah <a href="foo.com/bar">foo.com/bar</a>'),
 		('[color=red]hey now [url=apple.com]link[/url][/color]', '<span style="color:red;">hey now <a href="apple.com">link</a></span>'),
+		('[b] hello [u] world [/u] [/b]', '<strong>hello <u>world</u></strong>'),
 	)
 	
 	def setUp( self ):

@@ -15,6 +15,7 @@ class TagOptions (object):
 	escape_html = True
 	replace_links = True
 	replace_cosmetic = True
+	strip = True
 	
 	def __init__( self, tag_name, **kwargs ):
 		self.tag_name = tag_name
@@ -61,11 +62,13 @@ class Parser (object):
 		Installs a render function for the specified tag name. The render function
 		should have the following signature:
 		
-			def render( value, options, parent, context ):
+			def render( tag_name, value, options, parent, context ):
 				...
 		
 		The arguments are as follows:
 			
+			tag_name
+				The name of the tag being rendered.
 			value
 				The context between start and end tags, or None for standalone tags.
 				Whether this has been rendered depends on render_embedded tag option.
@@ -85,7 +88,7 @@ class Parser (object):
 		Installs a formatter that takes the tag options dictionary, puts a value key
 		in it, and uses it as a format dictionary to the given format string.
 		"""
-		def _render( value, options, parent, context ):
+		def _render( name, value, options, parent, context ):
 			fmt = {}
 			if options:
 				fmt.update( options )
@@ -104,7 +107,7 @@ class Parser (object):
 		self.add_simple_formatter( 'code', '<code>%(value)s</code>' )
 		self.add_simple_formatter( 'center', '<div style="text-align:center;">%(value)s</div>' )
 		self.add_simple_formatter( 'color', '<span style="color:%(color)s;">%(value)s</span>' )
-		def _render_url( value, options, parent, context ):
+		def _render_url( name, value, options, parent, context ):
 			fmt = (options['url'], value) if (options and 'url' in options) else (value, value)
 			return '<a href="%s">%s</a>' % fmt
 		self.add_formatter( 'url', _render_url, replace_links=False, replace_cosmetic=False )
@@ -307,7 +310,7 @@ class Parser (object):
 			if token_type == self.TOKEN_TAG_START:
 				render_func, tag = self.recognized_tags[tag_name]
 				if tag.standalone:
-					formatted.append( render_func(None,tag_opts,parent,context) )
+					formatted.append( render_func(tag_name,None,tag_opts,parent,context) )
 				else:
 					# First, find the extent of this tag's tokens.
 					end = self._find_closing_token( tag, tokens, idx+1 )
@@ -320,7 +323,9 @@ class Parser (object):
 						inner = self._transform( u''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic )
 						if tag.transform_newlines:
 							inner = inner.replace( '\n', self.newline )
-					formatted.append( render_func(inner,tag_opts,parent,context) )
+					if tag.strip:
+						inner = inner.strip()
+					formatted.append( render_func(tag_name,inner,tag_opts,parent,context) )
 					# Skip to the end tag.
 					idx = end
 			elif token_type == self.TOKEN_NEWLINE:
