@@ -61,7 +61,7 @@ class Parser (object):
 		Installs a render function for the specified tag name. The render function
 		should have the following signature:
 		
-			def render( value, options, context, parent ):
+			def render( value, options, parent, context ):
 				...
 		
 		The arguments are as follows:
@@ -70,12 +70,12 @@ class Parser (object):
 				The context between start and end tags, or None for standalone tags.
 				Whether this has been rendered depends on render_embedded tag option.
 			options
-				A dictionary of options specified on the opening tag, or None.
-			context
-				The user-defined context value passed into the format call.
+				A dictionary of options specified on the opening tag.
 			parent
 				The parent TagOptions, if the tag is being rendered inside another tag,
 				otherwise None.
+			context
+				The keyword argument dictionary passed into the format call.
 		"""
 		options = TagOptions( tag_name.strip().lower(), **kwargs )
 		self.recognized_tags[options.tag_name] = (render_func, options)
@@ -85,7 +85,7 @@ class Parser (object):
 		Installs a formatter that takes the tag options dictionary, puts a value key
 		in it, and uses it as a format dictionary to the given format string.
 		"""
-		def _render( value, options, context, parent ):
+		def _render( value, options, parent, context ):
 			fmt = {}
 			if options:
 				fmt.update( options )
@@ -104,7 +104,7 @@ class Parser (object):
 		self.add_simple_formatter( 'code', '<code>%(value)s</code>' )
 		self.add_simple_formatter( 'center', '<div style="text-align:center;">%(value)s</div>' )
 		self.add_simple_formatter( 'color', '<span style="color:%(color)s;">%(value)s</span>' )
-		def _render_url( value, options, context, parent ):
+		def _render_url( value, options, parent, context ):
 			fmt = (options['url'], value) if (options and 'url' in options) else (value, value)
 			return '<a href="%s">%s</a>' % fmt
 		self.add_formatter( 'url', _render_url, replace_links=False, replace_cosmetic=False )
@@ -198,7 +198,7 @@ class Parser (object):
 		if not tag_name:
 			return (False, tag, False, None)
 		closer = False
-		opts = None
+		opts = {}
 		if tag_name[0] == '/':
 			tag_name = tag_name[1:]
 			closer = True
@@ -299,7 +299,7 @@ class Parser (object):
 			data = _url_re.sub( r'<a href="\1">\1</a>', data )
 		return data
 	
-	def _format_tokens( self, tokens, context, parent=None ):
+	def _format_tokens( self, tokens, parent, **context ):
 		idx = 0
 		formatted = []
 		while idx < len(tokens):
@@ -307,20 +307,20 @@ class Parser (object):
 			if token_type == self.TOKEN_TAG_START:
 				render_func, tag = self.recognized_tags[tag_name]
 				if tag.standalone:
-					formatted.append( render_func(None,tag_opts,context,parent) )
+					formatted.append( render_func(None,tag_opts,parent,context) )
 				else:
 					# First, find the extent of this tag's tokens.
 					end = self._find_closing_token( tag, tokens, idx+1 )
 					subtokens = tokens[idx+1:end]
 					if tag.render_embedded:
 						# This tag renders embedded tags, simply recurse.
-						inner = self._format_tokens( subtokens, context, parent=tag )
+						inner = self._format_tokens( subtokens, tag, **context )
 					else:
 						# Otherwise, just concatenate all the token text.
 						inner = self._transform( u''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic )
 						if tag.transform_newlines:
 							inner = inner.replace( '\n', self.newline )
-					formatted.append( render_func(inner,tag_opts,context,parent) )
+					formatted.append( render_func(inner,tag_opts,parent,context) )
 					# Skip to the end tag.
 					idx = end
 			elif token_type == self.TOKEN_NEWLINE:
@@ -333,9 +333,9 @@ class Parser (object):
 			idx += 1
 		return u''.join( formatted )
 	
-	def format( self, data, context=None ):
+	def format( self, data, **context ):
 		tokens = self.tokenize( data )
-		return self._format_tokens( tokens, context )
+		return self._format_tokens( tokens, None, **context )
 	
 	def strip( self, data, strip_newlines=False ):
 		text = []
@@ -348,7 +348,7 @@ class Parser (object):
 
 g_parser = None
 
-def render_html( input, context=None ):
+def render_html( input, **context ):
 	"""
 	A module-level convenience method that creates a default bbcode parser,
 	and renders the input string as HTML.
@@ -356,7 +356,7 @@ def render_html( input, context=None ):
 	global g_parser
 	if g_parser is None:
 		g_parser = Parser()
-	return g_parser.format( input, context )
+	return g_parser.format( input, **context )
 
 if __name__ == '__main__':
 	import sys
