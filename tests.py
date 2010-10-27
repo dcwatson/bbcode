@@ -23,7 +23,7 @@ class ParserTests (unittest.TestCase):
 		('[url=apple.com]link[/url]', '<a href="apple.com">link</a>'),
 		('www.apple.com blah foo.com/bar', '<a href="www.apple.com">www.apple.com</a> blah <a href="foo.com/bar">foo.com/bar</a>'),
 		('[color=red]hey now [url=apple.com]link[/url][/color]', '<span style="color:red;">hey now <a href="apple.com">link</a></span>'),
-		('[b] hello [u] world [/u] [/b]', '<strong>hello <u>world</u></strong>'),
+		('[ b ] hello [u] world [/u] [ /b ]', '<strong>hello <u>world</u></strong>'),
 	)
 	
 	def setUp( self ):
@@ -35,9 +35,18 @@ class ParserTests (unittest.TestCase):
 			self.assertEqual( result, expected )
 	
 	def test_parse_opts( self ):
-		tag_name, opts = self.parser._parse_opts( 'url="http://test.com/s.php?a=bcd efg" popup' )
+		tag_name, opts = self.parser._parse_opts( 'url="http://test.com/s.php?a=bcd efg"  popup' )
 		self.assertEqual( tag_name, 'url' )
 		self.assertEqual( opts, {'url': 'http://test.com/s.php?a=bcd efg', 'popup': ''} )
+		tag_name, opts = self.parser._parse_opts( 'tag sep="=" flag=1' )
+		self.assertEqual( tag_name, 'tag' )
+		self.assertEqual( opts, {'sep': '=', 'flag': '1'} )
+		tag_name, opts = self.parser._parse_opts( ' quote opt1 opt2 author = Watson, Dan   ' )
+		self.assertEqual( tag_name, 'quote' )
+		self.assertEqual( opts, {'author': 'Watson, Dan', 'opt1': '', 'opt2': ''} )
+		tag_name, opts = self.parser._parse_opts( 'quote = Watson, Dan' )
+		self.assertEqual( tag_name, 'quote' )
+		self.assertEqual( opts, {'quote': 'Watson, Dan'} )
 	
 	def test_strip( self ):
 		result = self.parser.strip( '[b]hello \n[i]world[/i][/b] -- []', strip_newlines=True )

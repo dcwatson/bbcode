@@ -154,18 +154,25 @@ class Parser (object):
 		in_quote = False
 		attr = ''
 		value = ''
-		for pos, ch in enumerate(data):
+		attr_done = False
+		for pos, ch in enumerate(data.strip()):
 			if in_value:
 				if in_quote:
 					if ch == '"':
 						in_quote = False
+						in_value = False
+						if attr:
+							opts[attr] = value.strip()
+						attr = ''
+						value = ''
 					else:
 						value += ch
 				else:
 					if ch == '"':
 						in_quote = True
-					elif ch == ' ':
-						opts[attr] = value
+					elif ch == ' ' and data.find('=', pos+1) > 0:
+						# If there is no = after this, the value may accept spaces.
+						opts[attr] = value.strip()
 						attr = ''
 						value = ''
 						in_value = False
@@ -177,15 +184,21 @@ class Parser (object):
 					if name is None:
 						name = attr
 				elif ch == ' ':
-					if name is None:
-						name = attr
-					elif attr:
-						opts[attr] = ''
-					attr = ''
+					attr_done = True
 				else:
+					if attr_done:
+						if attr:
+							if name is None:
+								name = attr
+							else:
+								opts[attr] = ''
+						attr = ''
+						attr_done = False
 					attr += ch
-			if attr and pos == len(data) - 1:
-				opts[attr] = value
+		if attr:
+			if name is None:
+				name = attr
+			opts[attr] = value.strip()
 		return name, opts
 	
 	def _parse_tag( self, tag ):
@@ -196,7 +209,6 @@ class Parser (object):
 		"""
 		if (not tag.startswith(self.tag_opener)) or (not tag.endswith(self.tag_closer)) or ('\n' in tag) or ('\r' in tag):
 			return (False, tag, False, None)
-		# TODO: should [b] == [ b ]?
 		tag_name = tag[len(self.tag_opener):-len(self.tag_closer)].strip()
 		if not tag_name:
 			return (False, tag, False, None)
