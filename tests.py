@@ -6,7 +6,7 @@ import bbcode
 class ParserTests (unittest.TestCase):
 	
 	TESTS = (
-		('[b]hello world[/b]', '<strong>hello world</strong>'),
+		('[B]hello world[/b]', '<strong>hello world</strong>'),
 		('[b][i]test[/i][/b]', '<strong><em>test</em></strong>'),
 		('[b][i]test[/b][/i]', '<strong><em>test</em></strong>'),
 		('[b]hello [i]world[/i]', '<strong>hello <em>world</em></strong>'),
@@ -51,6 +51,13 @@ class ParserTests (unittest.TestCase):
 	def test_strip( self ):
 		result = self.parser.strip( '[b]hello \n[i]world[/i][/b] -- []', strip_newlines=True )
 		self.assertEqual( result, 'hello world -- []' )
+	
+	def test_linker( self ):
+		def _link( url ):
+			return '<a href="%s" target="_blank">%s</a>' % (url, url)
+		p = bbcode.Parser( linker=_link )
+		s = p.format( 'hello www.apple.com world' )
+		self.assertEqual( s, 'hello <a href="www.apple.com" target="_blank">www.apple.com</a> world' )
 
 if __name__ == '__main__':
 	unittest.main()

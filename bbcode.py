@@ -6,16 +6,15 @@ import re
 _url_re = re.compile( r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?]))', re.MULTILINE )
 
 class TagOptions (object):
-	
-	tag_name = None
-	newline_closes = False
-	standalone = False
-	render_embedded = True
-	transform_newlines = True
-	escape_html = True
-	replace_links = True
-	replace_cosmetic = True
-	strip = True
+	tag_name = None           # The name of the tag, all lowercase.
+	newline_closes = False    # True if a newline should automatically close this tag.
+	standalone = False        # True if this tag does not have a closing tag.
+	render_embedded = True    # True if tags should be rendered inside this tag.
+	transform_newlines = True # True if newlines should be converted to markup.
+	escape_html = True        # True if HTML characters (<, >, and &) should be escaped inside this tag.
+	replace_links = True      # True if URLs should be replaced with link markup inside this tag.
+	replace_cosmetic = True   # True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
+	strip = True              # True if leading and trailing whitespace should be stripped inside this tag.
 	
 	def __init__( self, tag_name, **kwargs ):
 		self.tag_name = tag_name
@@ -44,8 +43,7 @@ class Parser (object):
 		('(tm)', '&trade;'),
 	)
 	
-	def __init__( self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True, \
-					replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']' ):
+	def __init__( self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True, replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None ):
 		self.tag_opener = tag_opener
 		self.tag_closer = tag_closer
 		self.newline = newline
@@ -54,6 +52,7 @@ class Parser (object):
 		self.escape_html = escape_html
 		self.replace_cosmetic = replace_cosmetic
 		self.replace_links = replace_links
+		self.linker = linker
 		if install_defaults:
 			self.install_default_formatters()
 	
@@ -104,7 +103,7 @@ class Parser (object):
 		self.add_simple_formatter( 'list', '<ul>%(value)s</ul>', transform_newlines=False )
 		self.add_simple_formatter( '*', '<li>%(value)s</li>', newline_closes=True )
 		self.add_simple_formatter( 'quote', '<blockquote>%(value)s</blockquote>' )
-		self.add_simple_formatter( 'code', '<code>%(value)s</code>' )
+		self.add_simple_formatter( 'code', '<code>%(value)s</code>', render_embedded=False )
 		self.add_simple_formatter( 'center', '<div style="text-align:center;">%(value)s</div>' )
 		self.add_simple_formatter( 'color', '<span style="color:%(color)s;">%(value)s</span>' )
 		def _render_url( name, value, options, parent, context ):
@@ -300,6 +299,17 @@ class Parser (object):
 			pos += 1
 		return pos
 	
+	def _link_replace( self, match ):
+		"""
+		Callback for re.sub to replace link text with markup. Turns out using a callback function
+		is actually faster than using backrefs, plus this lets us provide a hook for user customization.
+		"""
+		url = match.group( 0 )
+		if self.linker:
+			return self.linker( url )
+		else:
+			return '<a href="%s">%s</a>' % (url, url)
+	
 	def _transform( self, data, escape_html, replace_links, replace_cosmetic ):
 		"""
 		Transforms the input string based on the options specified, taking into account
@@ -310,8 +320,7 @@ class Parser (object):
 		if self.replace_cosmetic and replace_cosmetic:
 			data = self._replace( data, self.REPLACE_COSMETIC )
 		if self.replace_links and replace_links:
-			# TODO: make this configurable
-			data = _url_re.sub( r'<a href="\1">\1</a>', data )
+			data = _url_re.sub( self._link_replace, data )
 		return data
 	
 	def _format_tokens( self, tokens, parent, **context ):
