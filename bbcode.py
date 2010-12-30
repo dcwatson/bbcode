@@ -100,7 +100,17 @@ class Parser (object):
 		self.add_simple_formatter( 'i', '<em>%(value)s</em>' )
 		self.add_simple_formatter( 'u', '<u>%(value)s</u>' )
 		self.add_simple_formatter( 's', '<strike>%(value)s</strike>' )
-		self.add_simple_formatter( 'list', '<ul>%(value)s</ul>', transform_newlines=False )
+		def _render_list( name, value, options, parent, context ):
+			list_type = options['list'] if (options and 'list' in options) else '*'
+			css_opts = {
+				'1': 'decimal', '01': 'decimal-leading-zero',
+				'a': 'lower-alpha', 'A': 'upper-alpha',
+				'i': 'lower-roman', 'I': 'upper-roman',
+			}
+			tag = 'ol' if list_type in css_opts else 'ul'
+			css = ' style="list-style-type:%s;"' % css_opts[list_type] if list_type in css_opts else ''
+			return '<%s%s>%s</%s>' % (tag, css, value, tag)
+		self.add_formatter( 'list', _render_list, transform_newlines=False )
 		self.add_simple_formatter( '*', '<li>%(value)s</li>', newline_closes=True )
 		self.add_simple_formatter( 'quote', '<blockquote>%(value)s</blockquote>' )
 		self.add_simple_formatter( 'code', '<code>%(value)s</code>', render_embedded=False )
