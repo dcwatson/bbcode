@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 0)
+__version_info__ = (1, 0, 1)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
 
 # Taken from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
-_url_re = re.compile( r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?]))', re.MULTILINE )
+_url_re = re.compile(r'(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?]))', re.MULTILINE)
 
 class TagOptions (object):
 	tag_name = None           # The name of the tag, all lowercase.
@@ -18,25 +18,25 @@ class TagOptions (object):
 	replace_links = True      # True if URLs should be replaced with link markup inside this tag.
 	replace_cosmetic = True   # True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
 	strip = True              # True if leading and trailing whitespace should be stripped inside this tag.
-	
-	def __init__( self, tag_name, **kwargs ):
+
+	def __init__(self, tag_name, **kwargs):
 		self.tag_name = tag_name
 		for attr, value in kwargs.items():
-			setattr( self, attr, bool(value) )
+			setattr(self, attr, bool(value))
 
 class Parser (object):
-	
+
 	TOKEN_TAG_START = 1
 	TOKEN_TAG_END = 2
 	TOKEN_NEWLINE = 3
 	TOKEN_DATA = 4
-	
+
 	REPLACE_ESCAPE = (
 		('&', '&amp;'),
 		('<', '&lt;'),
 		('>', '&gt;'),
 	)
-	
+
 	REPLACE_COSMETIC = (
 		('---', '&mdash;'),
 		('--', '&ndash;'),
@@ -45,8 +45,8 @@ class Parser (object):
 		('(reg)', '&reg;'),
 		('(tm)', '&trade;'),
 	)
-	
-	def __init__( self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True, replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None ):
+
+	def __init__(self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True, replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None):
 		self.tag_opener = tag_opener
 		self.tag_closer = tag_closer
 		self.newline = newline
@@ -58,17 +58,17 @@ class Parser (object):
 		self.linker = linker
 		if install_defaults:
 			self.install_default_formatters()
-	
-	def add_formatter( self, tag_name, render_func, **kwargs ):
+
+	def add_formatter(self, tag_name, render_func, **kwargs):
 		"""
 		Installs a render function for the specified tag name. The render function
 		should have the following signature:
-		
+
 			def render( tag_name, value, options, parent, context ):
 				...
-		
+
 		The arguments are as follows:
-			
+
 			tag_name
 				The name of the tag being rendered.
 			value
@@ -82,28 +82,28 @@ class Parser (object):
 			context
 				The keyword argument dictionary passed into the format call.
 		"""
-		options = TagOptions( tag_name.strip().lower(), **kwargs )
+		options = TagOptions(tag_name.strip().lower(), **kwargs)
 		self.recognized_tags[options.tag_name] = (render_func, options)
-	
-	def add_simple_formatter( self, tag_name, format, **kwargs ):
+
+	def add_simple_formatter(self, tag_name, format, **kwargs):
 		"""
 		Installs a formatter that takes the tag options dictionary, puts a value key
 		in it, and uses it as a format dictionary to the given format string.
 		"""
-		def _render( name, value, options, parent, context ):
+		def _render(name, value, options, parent, context):
 			fmt = {}
 			if options:
-				fmt.update( options )
-			fmt.update( {'value': value} )
+				fmt.update(options)
+			fmt.update({'value': value})
 			return format % fmt
-		self.add_formatter( tag_name, _render, **kwargs )
-	
-	def install_default_formatters( self ):
-		self.add_simple_formatter( 'b', '<strong>%(value)s</strong>' )
-		self.add_simple_formatter( 'i', '<em>%(value)s</em>' )
-		self.add_simple_formatter( 'u', '<u>%(value)s</u>' )
-		self.add_simple_formatter( 's', '<strike>%(value)s</strike>' )
-		def _render_list( name, value, options, parent, context ):
+		self.add_formatter(tag_name, _render, **kwargs)
+
+	def install_default_formatters(self):
+		self.add_simple_formatter('b', '<strong>%(value)s</strong>')
+		self.add_simple_formatter('i', '<em>%(value)s</em>')
+		self.add_simple_formatter('u', '<u>%(value)s</u>')
+		self.add_simple_formatter('s', '<strike>%(value)s</strike>')
+		def _render_list(name, value, options, parent, context):
 			list_type = options['list'] if (options and 'list' in options) else '*'
 			css_opts = {
 				'1': 'decimal', '01': 'decimal-leading-zero',
@@ -113,42 +113,44 @@ class Parser (object):
 			tag = 'ol' if list_type in css_opts else 'ul'
 			css = ' style="list-style-type:%s;"' % css_opts[list_type] if list_type in css_opts else ''
 			return '<%s%s>%s</%s>' % (tag, css, value, tag)
-		self.add_formatter( 'list', _render_list, transform_newlines=False )
-		self.add_simple_formatter( '*', '<li>%(value)s</li>', newline_closes=True )
-		self.add_simple_formatter( 'quote', '<blockquote>%(value)s</blockquote>' )
-		self.add_simple_formatter( 'code', '<code>%(value)s</code>', render_embedded=False )
-		self.add_simple_formatter( 'center', '<div style="text-align:center;">%(value)s</div>' )
-		self.add_simple_formatter( 'color', '<span style="color:%(color)s;">%(value)s</span>' )
-		def _render_url( name, value, options, parent, context ):
-			fmt = (options['url'], value) if (options and 'url' in options) else (value, value)
-			return '<a href="%s">%s</a>' % fmt
-		self.add_formatter( 'url', _render_url, replace_links=False, replace_cosmetic=False )
-	
-	def _replace( self, data, replacements ):
+		self.add_formatter('list', _render_list, transform_newlines=False)
+		self.add_simple_formatter('*', '<li>%(value)s</li>', newline_closes=True)
+		self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>')
+		self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False)
+		self.add_simple_formatter('center', '<div style="text-align:center;">%(value)s</div>')
+		self.add_simple_formatter('color', '<span style="color:%(color)s;">%(value)s</span>')
+		def _render_url(name, value, options, parent, context):
+			href = options['url'] if (options and 'url' in options) else value
+			if '://' not in href:
+				href = 'http://' + href
+			return '<a href="%s">%s</a>' % (href, value)
+		self.add_formatter('url', _render_url, replace_links=False, replace_cosmetic=False)
+
+	def _replace(self, data, replacements):
 		"""
 		Given a list of 2-tuples (find, repl) this function performs all
 		replacements on the input and returns the result.
 		"""
 		for find, repl in replacements:
-			data = data.replace( find, repl )
+			data = data.replace(find, repl)
 		return data
-	
-	def _newline_tokenize( self, data ):
+
+	def _newline_tokenize(self, data):
 		"""
 		Given a string that does not contain any tags, this function will
 		return a list of NEWLINE and DATA tokens such that if you concatenate
 		their data, you will have the original string.
 		"""
-		parts = data.split( '\n' )
+		parts = data.split('\n')
 		tokens = []
 		for num, part in enumerate(parts):
 			if part:
-				tokens.append( (self.TOKEN_DATA, None, None, part) )
+				tokens.append((self.TOKEN_DATA, None, None, part))
 			if num < (len(parts) - 1):
-				tokens.append( (self.TOKEN_NEWLINE, None, None, '\n') )
+				tokens.append((self.TOKEN_NEWLINE, None, None, '\n'))
 		return tokens
-	
-	def _parse_opts( self, data ):
+
+	def _parse_opts(self, data):
 		"""
 		Given a tag string, this function will parse any options out of it and
 		return a tuple of (tag_name, options_dict). Options may be quoted in order
@@ -182,7 +184,7 @@ class Parser (object):
 				else:
 					if ch == '"':
 						in_quote = True
-					elif ch == ' ' and data.find('=', pos+1) > 0:
+					elif ch == ' ' and data.find('=', pos + 1) > 0:
 						# If there is no = after this, the value may accept spaces.
 						opts[attr] = value.strip()
 						attr = ''
@@ -212,8 +214,8 @@ class Parser (object):
 				name = attr
 			opts[attr] = value.strip()
 		return name, opts
-	
-	def _parse_tag( self, tag ):
+
+	def _parse_tag(self, tag):
 		"""
 		Given a tag string (characters enclosed by []), this function will
 		parse any options and return a tuple of the form:
@@ -231,14 +233,14 @@ class Parser (object):
 			closer = True
 		# Parse options inside the opening tag, if needed.
 		if (('=' in tag_name) or (' ' in tag_name)) and not closer:
-			tag_name, opts = self._parse_opts( tag_name )
+			tag_name, opts = self._parse_opts(tag_name)
 		return (True, tag_name.strip().lower(), closer, opts)
-	
-	def tokenize( self, data ):
+
+	def tokenize(self, data):
 		"""
 		Tokenizes the given string. A token is a 4-tuple of the form:
 			(token_type, tag_name, tag_options, token_text)
-		
+
 		token_type
 			One of: TOKEN_TAG_START, TOKEN_TAG_END, TOKEN_NEWLINE, TOKEN_DATA
 		tag_name
@@ -249,33 +251,33 @@ class Parser (object):
 			The original token text
 		"""
 		if self.normalize_newlines:
-			data = data.replace( '\r\n', '\n' ).replace( '\r', '\n' )
+			data = data.replace('\r\n', '\n').replace('\r', '\n')
 		pos = start = end = 0
 		tokens = []
 		while pos < len(data):
-			start = data.find( self.tag_opener, pos )
+			start = data.find(self.tag_opener, pos)
 			if start >= pos:
 				# Check to see if there was data between this start and the last end.
 				if start > pos:
-					tl = self._newline_tokenize( data[pos:start] )
-					tokens.extend( tl )
-				end = data.find( self.tag_closer, start )
+					tl = self._newline_tokenize(data[pos:start])
+					tokens.extend(tl)
+				end = data.find(self.tag_closer, start)
 				# Check to see if another tag opens before this one closes.
-				new_check = data.find( self.tag_opener, start+len(self.tag_opener) )
+				new_check = data.find(self.tag_opener, start + len(self.tag_opener))
 				if new_check > 0 and new_check < end:
-					tokens.extend( self._newline_tokenize(data[start:new_check]) )
+					tokens.extend(self._newline_tokenize(data[start:new_check]))
 					pos = new_check
 				elif end > start:
-					tag = data[start:end+len(self.tag_closer)]
-					valid, tag_name, closer, opts = self._parse_tag( tag )
+					tag = data[start:end + len(self.tag_closer)]
+					valid, tag_name, closer, opts = self._parse_tag(tag)
 					# Make sure this is a well-formed, recognized tag, otherwise it's just data.
 					if valid and tag_name in self.recognized_tags:
 						if closer:
-							tokens.append( (self.TOKEN_TAG_END, tag_name, None, tag) )
+							tokens.append((self.TOKEN_TAG_END, tag_name, None, tag))
 						else:
-							tokens.append( (self.TOKEN_TAG_START, tag_name, opts, tag) )
+							tokens.append((self.TOKEN_TAG_START, tag_name, opts, tag))
 					else:
-						tokens.extend( self._newline_tokenize(tag) )
+						tokens.extend(self._newline_tokenize(tag))
 					pos = end + len(self.tag_closer)
 				else:
 					# An unmatched [
@@ -284,11 +286,11 @@ class Parser (object):
 				# No more tags left to parse.
 				break
 		if pos < len(data):
-			tl = self._newline_tokenize( data[pos:] )
-			tokens.extend( tl )
+			tl = self._newline_tokenize(data[pos:])
+			tokens.extend(tl)
 		return tokens
-	
-	def _find_closing_token( self, tag, tokens, pos ):
+
+	def _find_closing_token(self, tag, tokens, pos):
 		"""
 		Given the current tag options, a list of tokens, and the current position
 		in the token list, this function will find the position of the closing token
@@ -311,32 +313,35 @@ class Parser (object):
 					return pos
 			pos += 1
 		return pos
-	
-	def _link_replace( self, match ):
+
+	def _link_replace(self, match):
 		"""
 		Callback for re.sub to replace link text with markup. Turns out using a callback function
 		is actually faster than using backrefs, plus this lets us provide a hook for user customization.
 		"""
-		url = match.group( 0 )
+		url = match.group(0)
 		if self.linker:
-			return self.linker( url )
+			return self.linker(url)
 		else:
-			return '<a href="%s">%s</a>' % (url, url)
-	
-	def _transform( self, data, escape_html, replace_links, replace_cosmetic ):
+			href = url
+			if '://' not in href:
+				href = 'http://' + href
+			return '<a href="%s">%s</a>' % (href, url)
+
+	def _transform(self, data, escape_html, replace_links, replace_cosmetic):
 		"""
 		Transforms the input string based on the options specified, taking into account
 		whether the option is enabled globally for this parser.
 		"""
 		if self.escape_html and escape_html:
-			data = self._replace( data, self.REPLACE_ESCAPE )
+			data = self._replace(data, self.REPLACE_ESCAPE)
 		if self.replace_cosmetic and replace_cosmetic:
-			data = self._replace( data, self.REPLACE_COSMETIC )
+			data = self._replace(data, self.REPLACE_COSMETIC)
 		if self.replace_links and replace_links:
-			data = _url_re.sub( self._link_replace, data )
+			data = _url_re.sub(self._link_replace, data)
 		return data
-	
-	def _format_tokens( self, tokens, parent, **context ):
+
+	def _format_tokens(self, tokens, parent, **context):
 		idx = 0
 		formatted = []
 		while idx < len(tokens):
@@ -344,50 +349,50 @@ class Parser (object):
 			if token_type == self.TOKEN_TAG_START:
 				render_func, tag = self.recognized_tags[tag_name]
 				if tag.standalone:
-					formatted.append( render_func(tag_name,None,tag_opts,parent,context) )
+					formatted.append(render_func(tag_name, None, tag_opts, parent, context))
 				else:
 					# First, find the extent of this tag's tokens.
-					end = self._find_closing_token( tag, tokens, idx+1 )
-					subtokens = tokens[idx+1:end]
+					end = self._find_closing_token(tag, tokens, idx + 1)
+					subtokens = tokens[idx + 1:end]
 					if tag.render_embedded:
 						# This tag renders embedded tags, simply recurse.
-						inner = self._format_tokens( subtokens, tag, **context )
+						inner = self._format_tokens(subtokens, tag, **context)
 					else:
 						# Otherwise, just concatenate all the token text.
-						inner = self._transform( u''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic )
+						inner = self._transform(u''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic)
 						if tag.transform_newlines:
-							inner = inner.replace( '\n', self.newline )
+							inner = inner.replace('\n', self.newline)
 					if tag.strip:
 						inner = inner.strip()
-					formatted.append( render_func(tag_name,inner,tag_opts,parent,context) )
+					formatted.append(render_func(tag_name, inner, tag_opts, parent, context))
 					# Skip to the end tag.
 					idx = end
 			elif token_type == self.TOKEN_NEWLINE:
-				formatted.append( self.newline if (parent is None or parent.transform_newlines) else token_text )
+				formatted.append(self.newline if (parent is None or parent.transform_newlines) else token_text)
 			elif token_type == self.TOKEN_DATA:
 				escape = self.escape_html if parent is None else parent.escape_html
 				links = self.replace_links if parent is None else parent.replace_links
 				cosmetic = self.replace_cosmetic if parent is None else parent.replace_cosmetic
-				formatted.append( self._transform(token_text,escape,links,cosmetic) )
+				formatted.append(self._transform(token_text, escape, links, cosmetic))
 			idx += 1
-		return u''.join( formatted )
-	
-	def format( self, data, **context ):
-		tokens = self.tokenize( data )
-		return self._format_tokens( tokens, None, **context )
-	
-	def strip( self, data, strip_newlines=False ):
+		return u''.join(formatted)
+
+	def format(self, data, **context):
+		tokens = self.tokenize(data)
+		return self._format_tokens(tokens, None, **context)
+
+	def strip(self, data, strip_newlines=False):
 		text = []
-		for token_type, tag_name, tag_opts, token_text in self.tokenize( data ):
+		for token_type, tag_name, tag_opts, token_text in self.tokenize(data):
 			if token_type == self.TOKEN_DATA:
-				text.append( token_text )
+				text.append(token_text)
 			elif token_type == self.TOKEN_NEWLINE and not strip_newlines:
-				text.append( token_text )
-		return u''.join( text )
+				text.append(token_text)
+		return u''.join(text)
 
 g_parser = None
 
-def render_html( input, **context ):
+def render_html(input, **context):
 	"""
 	A module-level convenience method that creates a default bbcode parser,
 	and renders the input string as HTML.
@@ -395,8 +400,8 @@ def render_html( input, **context ):
 	global g_parser
 	if g_parser is None:
 		g_parser = Parser()
-	return g_parser.format( input, **context )
+	return g_parser.format(input, **context)
 
 if __name__ == '__main__':
 	import sys
-	print render_html( sys.stdin.read() )
+	print render_html(sys.stdin.read())
