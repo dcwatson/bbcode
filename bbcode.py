@@ -360,15 +360,19 @@ class Parser (object):
 					else:
 						# Otherwise, just concatenate all the token text.
 						inner = self._transform(u''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic)
-						if tag.transform_newlines:
-							inner = inner.replace('\n', self.newline)
+					# Strip before rendering or replacing newlines.
 					if tag.strip:
 						inner = inner.strip()
-					formatted.append(render_func(tag_name, inner, tag_opts, parent, context))
+					# Get the rendered contents.
+					content = render_func(tag_name, inner, tag_opts, parent, context)
+					if tag.transform_newlines:
+						content = content.replace('\n', self.newline).replace('\r', self.newline)
+					formatted.append(content)
 					# Skip to the end tag.
 					idx = end
 			elif token_type == self.TOKEN_NEWLINE:
-				formatted.append(self.newline if (parent is None or parent.transform_newlines) else token_text)
+				# If this is a top-level newline, replace it. Otherwise, it will be replaced (if necessary) by the code above.
+				formatted.append(self.newline if parent is None else token_text)
 			elif token_type == self.TOKEN_DATA:
 				escape = self.escape_html if parent is None else parent.escape_html
 				links = self.replace_links if parent is None else parent.replace_links

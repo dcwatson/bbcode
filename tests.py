@@ -25,6 +25,7 @@ class ParserTests (unittest.TestCase):
 		('www.apple.com blah foo.com/bar', '<a href="http://www.apple.com">www.apple.com</a> blah <a href="http://foo.com/bar">foo.com/bar</a>'),
 		('[color=red]hey now [url=apple.com]link[/url][/color]', '<span style="color:red;">hey now <a href="http://apple.com">link</a></span>'),
 		('[ b ] hello [u] world [/u] [ /b ]', '<strong>hello <u>world</u></strong>'),
+		('[quote] \r\ntesting\nstrip [/quote]', '<blockquote>testing<br />strip</blockquote>'),
 	)
 	
 	def setUp( self ):
