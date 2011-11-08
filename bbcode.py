@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 1)
+__version_info__ = (1, 0, 2)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -360,14 +360,13 @@ class Parser (object):
 					else:
 						# Otherwise, just concatenate all the token text.
 						inner = self._transform(u''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic)
-					# Strip before rendering or replacing newlines.
+					# Strip and replace newlines, if necessary.
 					if tag.strip:
 						inner = inner.strip()
-					# Get the rendered contents.
-					content = render_func(tag_name, inner, tag_opts, parent, context)
 					if tag.transform_newlines:
-						content = content.replace('\n', self.newline).replace('\r', self.newline)
-					formatted.append(content)
+						inner = inner.replace('\n', self.newline)
+					# Append the rendered contents.
+					formatted.append(render_func(tag_name, inner, tag_opts, parent, context))
 					# Skip to the end tag.
 					idx = end
 			elif token_type == self.TOKEN_NEWLINE:
