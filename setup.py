@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='bbcode',
-      version='1.0.2',
+      version='1.0.3',
       description='A pure python bbcode parser and formatter.',
       author='Dan Watson',
       author_email='dcwatson@gmail.com',

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 2)
+__version_info__ = (1, 0, 3)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -18,6 +18,7 @@ class TagOptions (object):
 	replace_links = True      # True if URLs should be replaced with link markup inside this tag.
 	replace_cosmetic = True   # True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
 	strip = True              # True if leading and trailing whitespace should be stripped inside this tag.
+	swallow_trailing_newline = False # True if this tag should swallow the first trailing newline (i.e. for block elements).
 
 	def __init__(self, tag_name, **kwargs):
 		self.tag_name = tag_name
@@ -163,7 +164,12 @@ class Parser (object):
 				tag_name=url, options={'url': 'http://test.com/s.php?a=bcd efg', 'popup': ''}
 		"""
 		name = None
-		opts = {}
+		try:
+			# OrderedDict is only available for 2.7+, so leave regular unsorted dicts as a fallback.
+			from collections import OrderedDict
+			opts = OrderedDict()
+		except:
+			opts = {}
 		in_value = False
 		in_quote = False
 		attr = ''
@@ -367,6 +373,11 @@ class Parser (object):
 						inner = inner.replace('\n', self.newline)
 					# Append the rendered contents.
 					formatted.append(render_func(tag_name, inner, tag_opts, parent, context))
+					# If the tag should swallow the first trailing newline, check the token after the closing token.
+					if tag.swallow_trailing_newline:
+						next = end + 1
+						if next < len(tokens) and tokens[next][0] == self.TOKEN_NEWLINE:
+							end = next
 					# Skip to the end tag.
 					idx = end
 			elif token_type == self.TOKEN_NEWLINE:
