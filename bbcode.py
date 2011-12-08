@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 3)
+__version_info__ = (1, 0, 4)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
 
-# Taken from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
-_url_re = re.compile(r'(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?]))', re.MULTILINE)
+# Adapted from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
+# Changed to only support one level of parentheses, since it was failing catastrophically on some URLs.
+# See http://www.regular-expressions.info/catastrophic.html
+_url_re = re.compile(r'(?im)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\([^\s()<>]+\))+(?:\([^\s()<>]+\)|[^\s`!()\[\]{};:\'".,<>?]))')
 
 class TagOptions (object):
 	tag_name = None           # The name of the tag, all lowercase.
