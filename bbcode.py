@@ -11,15 +11,15 @@ import re
 _url_re = re.compile(r'(?im)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\([^\s()<>]+\))+(?:\([^\s()<>]+\)|[^\s`!()\[\]{};:\'".,<>?]))')
 
 class TagOptions (object):
-	tag_name = None           # The name of the tag, all lowercase.
-	newline_closes = False    # True if a newline should automatically close this tag.
-	standalone = False        # True if this tag does not have a closing tag.
-	render_embedded = True    # True if tags should be rendered inside this tag.
-	transform_newlines = True # True if newlines should be converted to markup.
-	escape_html = True        # True if HTML characters (<, >, and &) should be escaped inside this tag.
-	replace_links = True      # True if URLs should be replaced with link markup inside this tag.
-	replace_cosmetic = True   # True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
-	strip = True              # True if leading and trailing whitespace should be stripped inside this tag.
+	tag_name = None                  # The name of the tag, all lowercase.
+	newline_closes = False           # True if a newline should automatically close this tag.
+	standalone = False               # True if this tag does not have a closing tag.
+	render_embedded = True           # True if tags should be rendered inside this tag.
+	transform_newlines = True        # True if newlines should be converted to markup.
+	escape_html = True               # True if HTML characters (<, >, and &) should be escaped inside this tag.
+	replace_links = True             # True if URLs should be replaced with link markup inside this tag.
+	replace_cosmetic = True          # True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
+	strip = True                     # True if leading and trailing whitespace should be stripped inside this tag.
 	swallow_trailing_newline = False # True if this tag should swallow the first trailing newline (i.e. for block elements).
 
 	def __init__(self, tag_name, **kwargs):
@@ -121,7 +121,19 @@ class Parser (object):
 		self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>')
 		self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False)
 		self.add_simple_formatter('center', '<div style="text-align:center;">%(value)s</div>')
-		self.add_simple_formatter('color', '<span style="color:%(color)s;">%(value)s</span>')
+		def _render_color(name, value, options, parent, context):
+			color = 'inherit'
+			if 'color' in options:
+				color = options['color'].strip()
+			elif options:
+				color = options.keys()[0].strip()
+			else:
+				return value
+			return '<span style="color:%(color)s;">%(value)s</span>' % {
+				'color': color,
+				'value': value,
+			}
+		self.add_formatter('color', _render_color)
 		def _render_url(name, value, options, parent, context):
 			href = options['url'] if (options and 'url' in options) else value
 			if '://' not in href:

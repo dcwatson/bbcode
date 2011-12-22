@@ -26,6 +26,8 @@ class ParserTests (unittest.TestCase):
 		('[color=red]hey now [url=apple.com]link[/url][/color]', '<span style="color:red;">hey now <a href="http://apple.com">link</a></span>'),
 		('[ b ] hello [u] world [/u] [ /b ]', '<strong>hello <u>world</u></strong>'),
 		('[quote] \r\ntesting\nstrip [/quote]', '<blockquote>testing<br />strip</blockquote>'),
+		('[color red]this is red[/color]', '<span style="color:red;">this is red</span>'),
+		('[color]nothing[/color]', 'nothing'),
 		# Known issue: since HTML is escaped first, the trailing &gt is captured by the URL regex.
 		#('<http://foo.com/blah_blah>', '&lt;<a href="http://foo.com/blah_blah">http://foo.com/blah_blah</a>&gt;'),
 	)
