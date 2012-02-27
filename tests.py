@@ -5,91 +5,91 @@ import bbcode
 
 class ParserTests (unittest.TestCase):
 
-	TESTS = (
-		('[B]hello world[/b]', '<strong>hello world</strong>'),
-		('[b][i]test[/i][/b]', '<strong><em>test</em></strong>'),
-		('[b][i]test[/b][/i]', '<strong><em>test</em></strong>'),
-		('[b]hello [i]world[/i]', '<strong>hello <em>world</em></strong>'),
-		('[tag][soup][/tag]', '[tag][soup][/tag]'),
-		('[b]hello [ world[/b]', '<strong>hello [ world</strong>'),
-		('[b]]he[llo [ w]orld[/b]', '<strong>]he[llo [ w]orld</strong>'),
-		('[b]hello [] world[/b]', '<strong>hello [] world</strong>'),
-		('[/asdf][/b]', '[/asdf]'),
-		('[list]\n[*]one\n[*]two\n[/list]', '<ul><li>one</li><li>two</li></ul>'),
-		('[list=1]\n[*]one\n[*]two\n[/list]', '<ol style="list-style-type:decimal;"><li>one</li><li>two</li></ol>'),
-		('[b\n oops [i]i[/i] forgot[/b]', '[b<br /> oops <em>i</em> forgot'),
-		('[b]over[i]lap[/b]ped[/i]', '<strong>over<em>lap</em></strong>ped'),
-		('>> hey -- a dash...', '&gt;&gt; hey &ndash; a dash&#8230;'),
-		('[url]http://foo.com/s.php?some--data[/url]', '<a href="http://foo.com/s.php?some--data">http://foo.com/s.php?some--data</a>'),
-		('[url=apple.com]link[/url]', '<a href="http://apple.com">link</a>'),
-		('www.apple.com blah foo.com/bar', '<a href="http://www.apple.com">www.apple.com</a> blah <a href="http://foo.com/bar">foo.com/bar</a>'),
-		('[color=red]hey now [url=apple.com]link[/url][/color]', '<span style="color:red;">hey now <a href="http://apple.com">link</a></span>'),
-		('[ b ] hello [u] world [/u] [ /b ]', '<strong>hello <u>world</u></strong>'),
-		('[quote] \r\ntesting\nstrip [/quote]', '<blockquote>testing<br />strip</blockquote>'),
-		('[color red]this is red[/color]', '<span style="color:red;">this is red</span>'),
-		('[color]nothing[/color]', 'nothing'),
-		# Known issue: since HTML is escaped first, the trailing &gt is captured by the URL regex.
-		#('<http://foo.com/blah_blah>', '&lt;<a href="http://foo.com/blah_blah">http://foo.com/blah_blah</a>&gt;'),
-	)
+    TESTS = (
+        ('[B]hello world[/b]', '<strong>hello world</strong>'),
+        ('[b][i]test[/i][/b]', '<strong><em>test</em></strong>'),
+        ('[b][i]test[/b][/i]', '<strong><em>test</em></strong>'),
+        ('[b]hello [i]world[/i]', '<strong>hello <em>world</em></strong>'),
+        ('[tag][soup][/tag]', '[tag][soup][/tag]'),
+        ('[b]hello [ world[/b]', '<strong>hello [ world</strong>'),
+        ('[b]]he[llo [ w]orld[/b]', '<strong>]he[llo [ w]orld</strong>'),
+        ('[b]hello [] world[/b]', '<strong>hello [] world</strong>'),
+        ('[/asdf][/b]', '[/asdf]'),
+        ('[list]\n[*]one\n[*]two\n[/list]', '<ul><li>one</li><li>two</li></ul>'),
+        ('[list=1]\n[*]one\n[*]two\n[/list]', '<ol style="list-style-type:decimal;"><li>one</li><li>two</li></ol>'),
+        ('[b\n oops [i]i[/i] forgot[/b]', '[b<br /> oops <em>i</em> forgot'),
+        ('[b]over[i]lap[/b]ped[/i]', '<strong>over<em>lap</em></strong>ped'),
+        ('>> hey -- a dash...', '&gt;&gt; hey &ndash; a dash&#8230;'),
+        ('[url]http://foo.com/s.php?some--data[/url]', '<a href="http://foo.com/s.php?some--data">http://foo.com/s.php?some--data</a>'),
+        ('[url=apple.com]link[/url]', '<a href="http://apple.com">link</a>'),
+        ('www.apple.com blah foo.com/bar', '<a href="http://www.apple.com">www.apple.com</a> blah <a href="http://foo.com/bar">foo.com/bar</a>'),
+        ('[color=red]hey now [url=apple.com]link[/url][/color]', '<span style="color:red;">hey now <a href="http://apple.com">link</a></span>'),
+        ('[ b ] hello [u] world [/u] [ /b ]', '<strong>hello <u>world</u></strong>'),
+        ('[quote] \r\ntesting\nstrip [/quote]', '<blockquote>testing<br />strip</blockquote>'),
+        ('[color red]this is red[/color]', '<span style="color:red;">this is red</span>'),
+        ('[color]nothing[/color]', 'nothing'),
+        # Known issue: since HTML is escaped first, the trailing &gt is captured by the URL regex.
+        #('<http://foo.com/blah_blah>', '&lt;<a href="http://foo.com/blah_blah">http://foo.com/blah_blah</a>&gt;'),
+    )
 
-	URL_TESTS = """
-	    http://foo.com/blah_blah
-	    (Something like http://foo.com/blah_blah)
-	    http://foo.com/blah_blah_(wikipedia)
-	    http://foo.com/more_(than)_one_(parens)
-	    (Something like http://foo.com/blah_blah_(wikipedia))
-	    http://foo.com/blah_(wikipedia)#cite-1
-	    http://foo.com/blah_(wikipedia)_blah#cite-1
-	    http://foo.com/(something)?after=parens
-	    http://foo.com/blah_blah.
-	    http://foo.com/blah_blah/.
-	    <http://foo.com/blah_blah>
-	    <http://foo.com/blah_blah/>
-	    http://foo.com/blah_blah,
-	    http://www.extinguishedscholar.com/wpglob/?p=364.
-	    <tag>http://example.com</tag>
-	    Just a www.example.com link.
-	    http://example.com/something?with,commas,in,url, but not at end
-	    bit.ly/foo
-	    http://asdf.xxxx.yyyy.com/vvvvv/PublicPages/Login.aspx?ReturnUrl=%2fvvvvv%2f(asdf@qwertybean.com/qwertybean)
-	""".strip()
+    URL_TESTS = """
+        http://foo.com/blah_blah
+        (Something like http://foo.com/blah_blah)
+        http://foo.com/blah_blah_(wikipedia)
+        http://foo.com/more_(than)_one_(parens)
+        (Something like http://foo.com/blah_blah_(wikipedia))
+        http://foo.com/blah_(wikipedia)#cite-1
+        http://foo.com/blah_(wikipedia)_blah#cite-1
+        http://foo.com/(something)?after=parens
+        http://foo.com/blah_blah.
+        http://foo.com/blah_blah/.
+        <http://foo.com/blah_blah>
+        <http://foo.com/blah_blah/>
+        http://foo.com/blah_blah,
+        http://www.extinguishedscholar.com/wpglob/?p=364.
+        <tag>http://example.com</tag>
+        Just a www.example.com link.
+        http://example.com/something?with,commas,in,url, but not at end
+        bit.ly/foo
+        http://asdf.xxxx.yyyy.com/vvvvv/PublicPages/Login.aspx?ReturnUrl=%2fvvvvv%2f(asdf@qwertybean.com/qwertybean)
+    """.strip()
 
-	def setUp(self):
-		self.parser = bbcode.Parser()
+    def setUp(self):
+        self.parser = bbcode.Parser()
 
-	def test_format(self):
-		for src, expected in self.TESTS:
-			result = self.parser.format(src)
-			self.assertEqual(result, expected)
+    def test_format(self):
+        for src, expected in self.TESTS:
+            result = self.parser.format(src)
+            self.assertEqual(result, expected)
 
-	def test_parse_opts(self):
-		tag_name, opts = self.parser._parse_opts('url="http://test.com/s.php?a=bcd efg"  popup')
-		self.assertEqual(tag_name, 'url')
-		self.assertEqual(opts, {'url': 'http://test.com/s.php?a=bcd efg', 'popup': ''})
-		tag_name, opts = self.parser._parse_opts('tag sep="=" flag=1')
-		self.assertEqual(tag_name, 'tag')
-		self.assertEqual(opts, {'sep': '=', 'flag': '1'})
-		tag_name, opts = self.parser._parse_opts(' quote opt1 opt2 author = Watson, Dan   ')
-		self.assertEqual(tag_name, 'quote')
-		self.assertEqual(opts, {'author': 'Watson, Dan', 'opt1': '', 'opt2': ''})
-		tag_name, opts = self.parser._parse_opts('quote = Watson, Dan')
-		self.assertEqual(tag_name, 'quote')
-		self.assertEqual(opts, {'quote': 'Watson, Dan'})
+    def test_parse_opts(self):
+        tag_name, opts = self.parser._parse_opts('url="http://test.com/s.php?a=bcd efg"  popup')
+        self.assertEqual(tag_name, 'url')
+        self.assertEqual(opts, {'url': 'http://test.com/s.php?a=bcd efg', 'popup': ''})
+        tag_name, opts = self.parser._parse_opts('tag sep="=" flag=1')
+        self.assertEqual(tag_name, 'tag')
+        self.assertEqual(opts, {'sep': '=', 'flag': '1'})
+        tag_name, opts = self.parser._parse_opts(' quote opt1 opt2 author = Watson, Dan   ')
+        self.assertEqual(tag_name, 'quote')
+        self.assertEqual(opts, {'author': 'Watson, Dan', 'opt1': '', 'opt2': ''})
+        tag_name, opts = self.parser._parse_opts('quote = Watson, Dan')
+        self.assertEqual(tag_name, 'quote')
+        self.assertEqual(opts, {'quote': 'Watson, Dan'})
 
-	def test_strip(self):
-		result = self.parser.strip('[b]hello \n[i]world[/i][/b] -- []', strip_newlines=True)
-		self.assertEqual(result, 'hello world -- []')
+    def test_strip(self):
+        result = self.parser.strip('[b]hello \n[i]world[/i][/b] -- []', strip_newlines=True)
+        self.assertEqual(result, 'hello world -- []')
 
-	def test_linker(self):
-		def _link(url):
-			return '<a href="%s" target="_blank">%s</a>' % (url, url)
-		p = bbcode.Parser(linker=_link)
-		s = p.format('hello www.apple.com world')
-		self.assertEqual(s, 'hello <a href="www.apple.com" target="_blank">www.apple.com</a> world')
+    def test_linker(self):
+        def _link(url):
+            return '<a href="%s" target="_blank">%s</a>' % (url, url)
+        p = bbcode.Parser(linker=_link)
+        s = p.format('hello www.apple.com world')
+        self.assertEqual(s, 'hello <a href="www.apple.com" target="_blank">www.apple.com</a> world')
 
-	def test_urls(self):
-		for line in self.URL_TESTS.splitlines():
-			self.assertEqual(len(bbcode._url_re.findall(line)), 1)
+    def test_urls(self):
+        for line in self.URL_TESTS.splitlines():
+            self.assertEqual(len(bbcode._url_re.findall(line)), 1)
 
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()

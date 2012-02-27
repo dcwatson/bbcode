@@ -1,3 +1,14 @@
+Installing
+==========
+
+The easiest way to install the bbcode module is via PyPI, e.g.:
+
+  pip install bbcode
+
+You can download the latest package from here:
+
+  http://pypi.python.org/pypi/bbcode
+
 Advantages Over Postmarkup
 ==========================
 
