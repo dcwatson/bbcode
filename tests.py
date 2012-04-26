@@ -1,7 +1,9 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import unittest
 import bbcode
+import sys
 
 class ParserTests (unittest.TestCase):
 
@@ -90,6 +92,15 @@ class ParserTests (unittest.TestCase):
     def test_urls(self):
         for line in self.URL_TESTS.splitlines():
             self.assertEqual(len(bbcode._url_re.findall(line)), 1)
+
+    def test_unicode(self):
+        if sys.version_info >= (3,):
+            src = '[center]ƒünk¥ • §tüƒƒ[/center]'
+            dst = '<div style="text-align:center;">ƒünk¥ • §tüƒƒ</div>'
+        else:
+            src = unicode('[center]ƒünk¥ • §tüƒƒ[/center]', 'utf-8')
+            dst = unicode('<div style="text-align:center;">ƒünk¥ • §tüƒƒ</div>', 'utf-8')
+        self.assertEqual(self.parser.format(src), dst)
 
 if __name__ == '__main__':
     unittest.main()

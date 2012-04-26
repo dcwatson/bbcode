@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 4)
+__version_info__ = (1, 0, 5)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -24,7 +24,7 @@ class TagOptions (object):
 
     def __init__(self, tag_name, **kwargs):
         self.tag_name = tag_name
-        for attr, value in kwargs.items():
+        for attr, value in list(kwargs.items()):
             setattr(self, attr, bool(value))
 
 class Parser (object):
@@ -126,7 +126,7 @@ class Parser (object):
             if 'color' in options:
                 color = options['color'].strip()
             elif options:
-                color = options.keys()[0].strip()
+                color = list(options.keys())[0].strip()
             else:
                 return value
             return '<span style="color:%(color)s;">%(value)s</span>' % {
@@ -379,7 +379,7 @@ class Parser (object):
                         inner = self._format_tokens(subtokens, tag, **context)
                     else:
                         # Otherwise, just concatenate all the token text.
-                        inner = self._transform(u''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic)
+                        inner = self._transform(''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic)
                     # Strip and replace newlines, if necessary.
                     if tag.strip:
                         inner = inner.strip()
@@ -403,7 +403,7 @@ class Parser (object):
                 cosmetic = self.replace_cosmetic if parent is None else parent.replace_cosmetic
                 formatted.append(self._transform(token_text, escape, links, cosmetic))
             idx += 1
-        return u''.join(formatted)
+        return ''.join(formatted)
 
     def format(self, data, **context):
         tokens = self.tokenize(data)
@@ -416,7 +416,7 @@ class Parser (object):
                 text.append(token_text)
             elif token_type == self.TOKEN_NEWLINE and not strip_newlines:
                 text.append(token_text)
-        return u''.join(text)
+        return ''.join(text)
 
 g_parser = None
 
@@ -432,4 +432,6 @@ def render_html(input, **context):
 
 if __name__ == '__main__':
     import sys
-    print render_html(sys.stdin.read())
+    sys.stdout.write(render_html(sys.stdin.read()))
+    sys.stdout.write('\n')
+    sys.stdout.flush()
