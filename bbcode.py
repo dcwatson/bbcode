@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 5)
+__version_info__ = (1, 0, 6)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -130,7 +130,7 @@ class Parser (object):
             else:
                 return value
             return '<span style="color:%(color)s;">%(value)s</span>' % {
-                'color': color,
+                'color': self._replace(color, self.REPLACE_ESCAPE),
                 'value': value,
             }
         self.add_formatter('color', _render_color)
@@ -138,7 +138,7 @@ class Parser (object):
             href = options['url'] if (options and 'url' in options) else value
             if '://' not in href:
                 href = 'http://' + href
-            return '<a href="%s">%s</a>' % (href, value)
+            return '<a href="%s">%s</a>' % (self._replace(href, self.REPLACE_ESCAPE), value)
         self.add_formatter('url', _render_url, replace_links=False, replace_cosmetic=False)
 
     def _replace(self, data, replacements):

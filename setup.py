@@ -1,9 +1,10 @@
 from distutils.core import setup
+import bbcode
 import sys
 
 setup(
     name='bbcode',
-    version='1.0.5',
+    version=bbcode.__version__,
     description='A pure python bbcode parser and formatter.',
     author='Dan Watson',
     author_email='dcwatson@gmail.com',

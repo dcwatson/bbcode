@@ -30,6 +30,8 @@ class ParserTests (unittest.TestCase):
         ('[quote] \r\ntesting\nstrip [/quote]', '<blockquote>testing<br />strip</blockquote>'),
         ('[color red]this is red[/color]', '<span style="color:red;">this is red</span>'),
         ('[color]nothing[/color]', 'nothing'),
+        ('[url="<script>alert(1);</script>"]xss[/url]', '<a href="http://&lt;script&gt;alert(1);&lt;/script&gt;">xss</a>'),
+        ('[color=<script></script>]xss[/color]', '<span style="color:&lt;script&gt;&lt;/script&gt;;">xss</span>'),
         # Known issue: since HTML is escaped first, the trailing &gt is captured by the URL regex.
         #('<http://foo.com/blah_blah>', '&lt;<a href="http://foo.com/blah_blah">http://foo.com/blah_blah</a>&gt;'),
     )
