@@ -196,7 +196,7 @@ class Parser (object):
                         in_quote = False
                         in_value = False
                         if attr:
-                            opts[attr] = value.strip()
+                            opts[attr.lower()] = value.strip()
                         attr = ''
                         value = ''
                     else:
@@ -206,7 +206,7 @@ class Parser (object):
                         in_quote = True
                     elif ch == ' ' and data.find('=', pos + 1) > 0:
                         # If there is no = after this, the value may accept spaces.
-                        opts[attr] = value.strip()
+                        opts[attr.lower()] = value.strip()
                         attr = ''
                         value = ''
                         in_value = False
@@ -225,15 +225,15 @@ class Parser (object):
                             if name is None:
                                 name = attr
                             else:
-                                opts[attr] = ''
+                                opts[attr.lower()] = ''
                         attr = ''
                         attr_done = False
                     attr += ch
         if attr:
             if name is None:
                 name = attr
-            opts[attr] = value.strip()
-        return name, opts
+            opts[attr.lower()] = value.strip()
+        return name.lower(), opts
 
     def _parse_tag(self, tag):
         """

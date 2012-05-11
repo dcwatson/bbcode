@@ -34,6 +34,8 @@ class ParserTests (unittest.TestCase):
         ('[color=<script></script>]xss[/color]', '<span style="color:&lt;script&gt;&lt;/script&gt;;">xss</span>'),
         # Known issue: since HTML is escaped first, the trailing &gt is captured by the URL regex.
         #('<http://foo.com/blah_blah>', '&lt;<a href="http://foo.com/blah_blah">http://foo.com/blah_blah</a>&gt;'),
+        ('[COLOR=red]hello[/color]', '<span style="color:red;">hello</span>'),
+        ('[URL=apple.com]link[/URL]', '<a href="http://apple.com">link</a>'),
     )
 
     URL_TESTS = """
