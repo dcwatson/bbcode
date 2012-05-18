@@ -3,11 +3,11 @@ Installing
 
 The easiest way to install the bbcode module is via PyPI, e.g.:
 
-  pip install bbcode
+    pip install bbcode
 
 You can download the latest package from here:
 
-  http://pypi.python.org/pypi/bbcode
+    http://pypi.python.org/pypi/bbcode
 
 
 Requirements
@@ -19,26 +19,26 @@ Python, tested with versions 2.5 through 3.2.
 Usage
 =====
 
-# Using the default parser.
-import bbcode
-html = bbcode.render_html(text)
+    # Using the default parser.
+    import bbcode
+    html = bbcode.render_html(text)
 
-# Installing simple formatters.
-parser = bbcode.Parser()
-parser.add_simple_formatter('hr', '<hr />', standalone=True)
-parser.add_simple_formatter('sub', '<sub>%(value)s</sub>')
-parser.add_simple_formatter('sup', '<sup>%(value)s</sup>')
+    # Installing simple formatters.
+    parser = bbcode.Parser()
+    parser.add_simple_formatter('hr', '<hr />', standalone=True)
+    parser.add_simple_formatter('sub', '<sub>%(value)s</sub>')
+    parser.add_simple_formatter('sup', '<sup>%(value)s</sup>')
 
-# A custom render function.
-def render_color(tag_name, value, options, parent, context):
-    return '<span style="color:%s;">%s</span>' % (tag_name, value)
+    # A custom render function.
+    def render_color(tag_name, value, options, parent, context):
+        return '<span style="color:%s;">%s</span>' % (tag_name, value)
 
-# Installing advanced formatters.
-for color in ('red', 'blue', 'green', 'yellow', 'black', 'white'):
-    parser.add_formatter(color, render_color)
+    # Installing advanced formatters.
+    for color in ('red', 'blue', 'green', 'yellow', 'black', 'white'):
+        parser.add_formatter(color, render_color)
 
-# Calling format with context.
-html = parser.format(text, somevar='somevalue')
+    # Calling format with context.
+    html = parser.format(text, somevar='somevalue')
 
 
 Advantages Over Postmarkup
@@ -50,7 +50,7 @@ Advantages Over Postmarkup
 
 * More liberal (and accurate) automatic link creation, using John Gruber's
   URL regular expression:
-    http://daringfireball.net/2010/07/improved_regex_for_matching_urls
+      http://daringfireball.net/2010/07/improved_regex_for_matching_urls
 
 * Does not swallow unrecognized tags. For example, [3] will be output as
   [3], not silently ignored.

@@ -11,16 +11,16 @@ import re
 _url_re = re.compile(r'(?im)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\([^\s()<>]+\))+(?:\([^\s()<>]+\)|[^\s`!()\[\]{};:\'".,<>?]))')
 
 class TagOptions (object):
-    tag_name = None                  # The name of the tag, all lowercase.
-    newline_closes = False           # True if a newline should automatically close this tag.
-    standalone = False               # True if this tag does not have a closing tag.
-    render_embedded = True           # True if tags should be rendered inside this tag.
-    transform_newlines = True        # True if newlines should be converted to markup.
-    escape_html = True               # True if HTML characters (<, >, and &) should be escaped inside this tag.
-    replace_links = True             # True if URLs should be replaced with link markup inside this tag.
-    replace_cosmetic = True          # True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
-    strip = True                     # True if leading and trailing whitespace should be stripped inside this tag.
-    swallow_trailing_newline = False # True if this tag should swallow the first trailing newline (i.e. for block elements).
+    tag_name = None                  #: The name of the tag, all lowercase.
+    newline_closes = False           #: True if a newline should automatically close this tag.
+    standalone = False               #: True if this tag does not have a closing tag.
+    render_embedded = True           #: True if tags should be rendered inside this tag.
+    transform_newlines = True        #: True if newlines should be converted to markup.
+    escape_html = True               #: True if HTML characters (<, >, and &) should be escaped inside this tag.
+    replace_links = True             #: True if URLs should be replaced with link markup inside this tag.
+    replace_cosmetic = True          #: True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
+    strip = True                     #: True if leading and trailing whitespace should be stripped inside this tag.
+    swallow_trailing_newline = False #: True if this tag should swallow the first trailing newline (i.e. for block elements).
 
     def __init__(self, tag_name, **kwargs):
         self.tag_name = tag_name
@@ -67,8 +67,7 @@ class Parser (object):
         Installs a render function for the specified tag name. The render function
         should have the following signature:
 
-            def render( tag_name, value, options, parent, context ):
-                ...
+            def render(tag_name, value, options, parent, context)
 
         The arguments are as follows:
 
@@ -102,6 +101,11 @@ class Parser (object):
         self.add_formatter(tag_name, _render, **kwargs)
 
     def install_default_formatters(self):
+        """
+        Installs default formatters for the following tags:
+        
+            b, i, u, s, list (and \*), quote, code, center, color, url
+        """
         self.add_simple_formatter('b', '<strong>%(value)s</strong>')
         self.add_simple_formatter('i', '<em>%(value)s</em>')
         self.add_simple_formatter('u', '<u>%(value)s</u>')
@@ -259,16 +263,17 @@ class Parser (object):
     def tokenize(self, data):
         """
         Tokenizes the given string. A token is a 4-tuple of the form:
+        
             (token_type, tag_name, tag_options, token_text)
 
-        token_type
-            One of: TOKEN_TAG_START, TOKEN_TAG_END, TOKEN_NEWLINE, TOKEN_DATA
-        tag_name
-            The name of the tag if token_type=TOKEN_TAG_*, otherwise None
-        tag_options
-            A dictionary of options specified for TOKEN_TAG_START, otherwise None
-        token_text
-            The original token text
+            token_type
+                One of: TOKEN_TAG_START, TOKEN_TAG_END, TOKEN_NEWLINE, TOKEN_DATA
+            tag_name
+                The name of the tag if token_type=TOKEN_TAG_*, otherwise None
+            tag_options
+                A dictionary of options specified for TOKEN_TAG_START, otherwise None
+            token_text
+                The original token text
         """
         if self.normalize_newlines:
             data = data.replace('\r\n', '\n').replace('\r', '\n')
@@ -406,10 +411,17 @@ class Parser (object):
         return ''.join(formatted)
 
     def format(self, data, **context):
+        """
+        Formats the input text using any installed renderers. Any context keyword arguments
+        given here will be passed along to the render functions as a context dictionary.
+        """
         tokens = self.tokenize(data)
         return self._format_tokens(tokens, None, **context)
 
     def strip(self, data, strip_newlines=False):
+        """
+        Strips out any tags from the input text, using the same tokenization as the formatter.
+        """
         text = []
         for token_type, tag_name, tag_opts, token_text in self.tokenize(data):
             if token_type == self.TOKEN_DATA:
