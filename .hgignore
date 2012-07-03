@@ -1,4 +1,5 @@
-\.pyc$
+\.pyc
+\.DS_Store
 MANIFEST
 dist
 .settings
