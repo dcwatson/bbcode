@@ -1,6 +1,5 @@
 from distutils.core import setup
 import bbcode
-import sys
 
 setup(
     name='bbcode',
@@ -8,7 +7,7 @@ setup(
     description='A pure python bbcode parser and formatter.',
     author='Dan Watson',
     author_email='dcwatson@gmail.com',
-    url='https://bitbucket.org/dcwatson/bbcode',
+    url='https://github.com/dcwatson/bbcode',
     license='BSD',
     py_modules=['bbcode'],
     classifiers=[
