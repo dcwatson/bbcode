@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 6)
+__version_info__ = (1, 0, 7)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -13,6 +13,7 @@ _url_re = re.compile(r'(?im)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2
 class TagOptions (object):
     tag_name = None                  #: The name of the tag, all lowercase.
     newline_closes = False           #: True if a newline should automatically close this tag.
+    same_tag_closes = False          #: True if another start of the same tag should automatically close this tag.
     standalone = False               #: True if this tag does not have a closing tag.
     render_embedded = True           #: True if tags should be rendered inside this tag.
     transform_newlines = True        #: True if newlines should be converted to markup.
@@ -121,7 +122,7 @@ class Parser (object):
             css = ' style="list-style-type:%s;"' % css_opts[list_type] if list_type in css_opts else ''
             return '<%s%s>%s</%s>' % (tag, css, value, tag)
         self.add_formatter('list', _render_list, transform_newlines=False)
-        self.add_simple_formatter('*', '<li>%(value)s</li>', newline_closes=True)
+        self.add_simple_formatter('*', '<li>%(value)s</li>', newline_closes=True, same_tag_closes=True)
         self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>')
         self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False)
         self.add_simple_formatter('center', '<div style="text-align:center;">%(value)s</div>')
@@ -320,7 +321,9 @@ class Parser (object):
         Given the current tag options, a list of tokens, and the current position
         in the token list, this function will find the position of the closing token
         associated with the specified tag. This may be a closing tag, a newline, or
-        simply the end of the list (to ensure tags are closed).
+        simply the end of the list (to ensure tags are closed). This function should
+        return a tuple of the form (end_pos, consume), where consume should indicate
+        whether the ending token should be consumed or not.
         """
         embed_count = 0
         while pos < len(tokens):
@@ -328,16 +331,18 @@ class Parser (object):
             if token_type == self.TOKEN_NEWLINE and tag.newline_closes:
                 # If for some crazy reason there are embedded tags that both close on newline,
                 # the first newline will automatically close all those nested tags.
-                return pos
+                return pos, True
             elif token_type == self.TOKEN_TAG_START and tag_name == tag.tag_name:
+                if tag.same_tag_closes:
+                    return pos, False
                 embed_count += 1
             elif token_type == self.TOKEN_TAG_END and tag_name == tag.tag_name:
                 if embed_count > 0:
                     embed_count -= 1
                 else:
-                    return pos
+                    return pos, True
             pos += 1
-        return pos
+        return pos, True
 
     def _link_replace(self, match):
         """
@@ -377,8 +382,11 @@ class Parser (object):
                     formatted.append(render_func(tag_name, None, tag_opts, parent, context))
                 else:
                     # First, find the extent of this tag's tokens.
-                    end = self._find_closing_token(tag, tokens, idx + 1)
+                    end, consume = self._find_closing_token(tag, tokens, idx + 1)
                     subtokens = tokens[idx + 1:end]
+                    # If the end tag should not be consumed, back up one (after grabbing the subtokens).
+                    if not consume:
+                        end = end - 1
                     if tag.render_embedded:
                         # This tag renders embedded tags, simply recurse.
                         inner = self._format_tokens(subtokens, tag, **context)
