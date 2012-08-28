@@ -88,7 +88,7 @@ class Parser (object):
         options = TagOptions(tag_name.strip().lower(), **kwargs)
         self.recognized_tags[options.tag_name] = (render_func, options)
 
-    def add_simple_formatter(self, tag_name, format, **kwargs):
+    def add_simple_formatter(self, tag_name, format_string, **kwargs):
         """
         Installs a formatter that takes the tag options dictionary, puts a value key
         in it, and uses it as a format dictionary to the given format string.
@@ -98,7 +98,7 @@ class Parser (object):
             if options:
                 fmt.update(options)
             fmt.update({'value': value})
-            return format % fmt
+            return format_string % fmt
         self.add_formatter(tag_name, _render, **kwargs)
 
     def install_default_formatters(self):
@@ -402,9 +402,9 @@ class Parser (object):
                     formatted.append(render_func(tag_name, inner, tag_opts, parent, context))
                     # If the tag should swallow the first trailing newline, check the token after the closing token.
                     if tag.swallow_trailing_newline:
-                        next = end + 1
-                        if next < len(tokens) and tokens[next][0] == self.TOKEN_NEWLINE:
-                            end = next
+                        next_pos = end + 1
+                        if next_pos < len(tokens) and tokens[next_pos][0] == self.TOKEN_NEWLINE:
+                            end = next_pos
                     # Skip to the end tag.
                     idx = end
             elif token_type == self.TOKEN_NEWLINE:
@@ -440,7 +440,7 @@ class Parser (object):
 
 g_parser = None
 
-def render_html(input, **context):
+def render_html(input_text, **context):
     """
     A module-level convenience method that creates a default bbcode parser,
     and renders the input string as HTML.
@@ -448,7 +448,7 @@ def render_html(input, **context):
     global g_parser
     if g_parser is None:
         g_parser = Parser()
-    return g_parser.format(input, **context)
+    return g_parser.format(input_text, **context)
 
 if __name__ == '__main__':
     import sys
