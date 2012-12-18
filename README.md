@@ -5,15 +5,19 @@ The easiest way to install the bbcode module is via PyPI, e.g.:
 
     pip install bbcode
 
-You can download the latest package from here:
+You can download the latest package from:
 
     http://pypi.python.org/pypi/bbcode
+
+Or view the source on GitHub:
+
+    https://github.com/dcwatson/bbcode
 
 
 Requirements
 ============
 
-Python, tested with versions 2.5 through 3.2.
+Python, tested with versions 2.5 through 3.3.
 
 
 Usage
