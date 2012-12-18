@@ -30,13 +30,16 @@ class ParserTests (unittest.TestCase):
         ('[quote] \r\ntesting\nstrip [/quote]', '<blockquote>testing<br />strip</blockquote>'),
         ('[color red]this is red[/color]', '<span style="color:red;">this is red</span>'),
         ('[color]nothing[/color]', 'nothing'),
-        ('[url="<script>alert(1);</script>"]xss[/url]', '<a href="http://&lt;script&gt;alert(1);&lt;/script&gt;">xss</a>'),
+        ('[url="<script>alert(1);</script>"]xss[/url]', '<a href="&lt;script&gt;alert(1);&lt;/script&gt;">xss</a>'),
         ('[color=<script></script>]xss[/color]', '<span style="color:&lt;script&gt;&lt;/script&gt;;">xss</span>'),
         # Known issue: since HTML is escaped first, the trailing &gt is captured by the URL regex.
         #('<http://foo.com/blah_blah>', '&lt;<a href="http://foo.com/blah_blah">http://foo.com/blah_blah</a>&gt;'),
         ('[COLOR=red]hello[/color]', '<span style="color:red;">hello</span>'),
         ('[URL=apple.com]link[/URL]', '<a href="http://apple.com">link</a>'),
         ('[list] [*]Entry 1 [*]Entry 2 [*]Entry 3   [/list]', '<ul><li>Entry 1</li><li>Entry 2</li><li>Entry 3</li></ul>'),
+        ('[url=relative/url.html]link[/url]', '<a href="relative/url.html">link</a>'),
+        ('[url=/absolute/url.html]link[/url]', '<a href="/absolute/url.html">link</a>'),
+        ('[url=test.html]page[/url]', '<a href="test.html">page</a>'),
     )
 
     URL_TESTS = """
@@ -96,7 +99,8 @@ class ParserTests (unittest.TestCase):
 
     def test_urls(self):
         for line in self.URL_TESTS.splitlines():
-            self.assertEqual(len(bbcode._url_re.findall(line)), 1)
+            num = len(bbcode._url_re.findall(line))
+            self.assertEqual(num, 1, 'Found %d links in "%s"' % (num, line.strip()))
 
     def test_unicode(self):
         if sys.version_info >= (3,):

@@ -10,6 +10,10 @@ import re
 # See http://www.regular-expressions.info/catastrophic.html
 _url_re = re.compile(r'(?im)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\([^\s()<>]+\))+(?:\([^\s()<>]+\)|[^\s`!()\[\]{};:\'".,<>?]))')
 
+# For the URL tag, try to be smart about when to append a missing http://. If the given link looks like a domain,
+# add a http:// in front of it, otherwise leave it alone (since it may be a relative path, a filename, etc).
+_domain_re = re.compile(r'(?im)(?:www\d{0,3}[.]|[a-z0-9.\-]+[.](?:com|net|org|edu|biz|gov|mil|info|io|name|me|tv|us|uk|mobi))')
+
 class TagOptions (object):
     tag_name = None                  #: The name of the tag, all lowercase.
     newline_closes = False           #: True if a newline should automatically close this tag.
@@ -104,7 +108,7 @@ class Parser (object):
     def install_default_formatters(self):
         """
         Installs default formatters for the following tags:
-        
+
             b, i, u, s, list (and \*), quote, code, center, color, url
         """
         self.add_simple_formatter('b', '<strong>%(value)s</strong>')
@@ -141,7 +145,8 @@ class Parser (object):
         self.add_formatter('color', _render_color)
         def _render_url(name, value, options, parent, context):
             href = options['url'] if (options and 'url' in options) else value
-            if '://' not in href:
+            # Only add the missing http:// if it looks like it starts with a domain name.
+            if '://' not in href and _domain_re.match(href):
                 href = 'http://' + href
             return '<a href="%s">%s</a>' % (self._replace(href, self.REPLACE_ESCAPE), value)
         self.add_formatter('url', _render_url, replace_links=False, replace_cosmetic=False)
@@ -264,7 +269,7 @@ class Parser (object):
     def tokenize(self, data):
         """
         Tokenizes the given string. A token is a 4-tuple of the form:
-        
+
             (token_type, tag_name, tag_options, token_text)
 
             token_type
