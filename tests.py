@@ -40,6 +40,10 @@ class ParserTests (unittest.TestCase):
         ('[url=relative/url.html]link[/url]', '<a href="relative/url.html">link</a>'),
         ('[url=/absolute/url.html]link[/url]', '<a href="/absolute/url.html">link</a>'),
         ('[url=test.html]page[/url]', '<a href="test.html">page</a>'),
+        # Tests to make sure links don't get cosmetic replacements.
+        ('[url=http://test.com/my--page]test[/url]', '<a href="http://test.com/my--page">test</a>'),
+        ('http://test.com/my...page(c)', '<a href="http://test.com/my...page(c)">http://test.com/my...page(c)</a>'),
+        ('multiple http://apple.com/page link http://foo.com/foo--bar test', 'multiple <a href="http://apple.com/page">http://apple.com/page</a> link <a href="http://foo.com/foo--bar">http://foo.com/foo--bar</a> test'),
     )
 
     URL_TESTS = """

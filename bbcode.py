@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 7)
+__version_info__ = (1, 0, 8)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -368,12 +368,30 @@ class Parser (object):
         Transforms the input string based on the options specified, taking into account
         whether the option is enabled globally for this parser.
         """
+        url_matches = {}
+        if self.replace_links and replace_links:
+            # If we're replacing links in the text (i.e. not those in [url] tags) then we need to be
+            # careful to pull them out before doing any escaping or cosmetic replacement.
+            pos = 0
+            while True:
+                match = _url_re.search(data, pos)
+                if not match:
+                    break
+                # Replace any link with a token that we can substitute back in after replacements.
+                token = '{{ bbcode-link-%s }}' % id(match)
+                url_matches[token] = self._link_replace(match)
+                start, end = match.span()
+                data = data[:start] + token + data[end:]
+                # To be perfectly accurate, this should probably be len(data[:start] + token), but
+                # start will work, because the token itself won't match as a URL.
+                pos = start
         if self.escape_html and escape_html:
             data = self._replace(data, self.REPLACE_ESCAPE)
         if self.replace_cosmetic and replace_cosmetic:
             data = self._replace(data, self.REPLACE_COSMETIC)
-        if self.replace_links and replace_links:
-            data = _url_re.sub(self._link_replace, data)
+        # Now put the replaced links back in the text.
+        for token, replacement in url_matches.items():
+            data = data.replace(token, replacement)
         return data
 
     def _format_tokens(self, tokens, parent, **context):
