@@ -43,6 +43,8 @@ class Parser (object):
         ('&', '&amp;'),
         ('<', '&lt;'),
         ('>', '&gt;'),
+        ('"', '&quot;'),
+        ("'", '&#39;'),
     )
 
     REPLACE_COSMETIC = (
@@ -144,11 +146,15 @@ class Parser (object):
             }
         self.add_formatter('color', _render_color)
         def _render_url(name, value, options, parent, context):
-            href = options['url'] if (options and 'url' in options) else value
+            if options and 'url' in options:
+                # Option values are not escaped for HTML output.
+                href = self._replace(options['url'], self.REPLACE_ESCAPE)
+            else:
+                href = value
             # Only add the missing http:// if it looks like it starts with a domain name.
             if '://' not in href and _domain_re.match(href):
                 href = 'http://' + href
-            return '<a href="%s">%s</a>' % (self._replace(href, self.REPLACE_ESCAPE), value)
+            return '<a href="%s">%s</a>' % (href, value)
         self.add_formatter('url', _render_url, replace_links=False, replace_cosmetic=False)
 
     def _replace(self, data, replacements):
