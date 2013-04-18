@@ -346,7 +346,8 @@ class Parser (object):
             elif token_type == self.TOKEN_TAG_START and tag_name == tag.tag_name:
                 if tag.same_tag_closes:
                     return pos, False
-                embed_count += 1
+                if tag.render_embedded:
+                    embed_count += 1
             elif token_type == self.TOKEN_TAG_END and tag_name == tag.tag_name:
                 if embed_count > 0:
                     embed_count -= 1

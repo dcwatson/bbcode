@@ -46,6 +46,7 @@ class ParserTests (unittest.TestCase):
         ('multiple http://apple.com/page link http://foo.com/foo--bar test', 'multiple <a href="http://apple.com/page">http://apple.com/page</a> link <a href="http://foo.com/foo--bar">http://foo.com/foo--bar</a> test'),
         ('[url=http://foo.com]<script>alert("XSS");</script>[/url]', '<a href="http://foo.com">&lt;script&gt;alert(&quot;XSS&quot;);&lt;/script&gt;</a>'),
         ('[url]123" onmouseover="alert(\'Hacked\');[/url]', '<a href="123&quot; onmouseover=&quot;alert(&#39;Hacked&#39;);">123&quot; onmouseover=&quot;alert(&#39;Hacked&#39;);</a>'),
+        ('[code python]lambda code: [code] + [1, 2][/code]', '<code>lambda code: [code] + [1, 2]</code>'),
     )
 
     URL_TESTS = """
