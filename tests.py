@@ -26,7 +26,7 @@ class ParserTests (unittest.TestCase):
         ('[url=apple.com]link[/url]', '<a href="http://apple.com">link</a>'),
         ('www.apple.com blah foo.com/bar', '<a href="http://www.apple.com">www.apple.com</a> blah <a href="http://foo.com/bar">foo.com/bar</a>'),
         ('[color=red]hey now [url=apple.com]link[/url][/color]', '<span style="color:red;">hey now <a href="http://apple.com">link</a></span>'),
-        ('[ b ] hello [u] world [/u] [ /b ]', '<strong>hello <u>world</u></strong>'),
+        ('[ b ] hello [u] world [/u] [ /b ]', '<strong> hello <u> world </u> </strong>'),
         ('[quote] \r\ntesting\nstrip [/quote]', '<blockquote>testing<br />strip</blockquote>'),
         ('[color red]this is red[/color]', '<span style="color:red;">this is red</span>'),
         ('[color]nothing[/color]', 'nothing'),
@@ -96,6 +96,9 @@ class ParserTests (unittest.TestCase):
     def test_strip(self):
         result = self.parser.strip('[b]hello \n[i]world[/i][/b] -- []', strip_newlines=True)
         self.assertEqual(result, 'hello world -- []')
+        html_parser = bbcode.Parser(tag_opener='<', tag_closer='>', drop_unrecognized=True)
+        result = html_parser.strip('<div class="test"><b>hello</b> <i>world</i><img src="test.jpg" /></div>')
+        self.assertEqual(result, 'hello world')
 
     def test_linker(self):
         def _link(url):

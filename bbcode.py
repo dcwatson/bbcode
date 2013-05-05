@@ -24,7 +24,7 @@ class TagOptions (object):
     escape_html = True               #: True if HTML characters (<, >, and &) should be escaped inside this tag.
     replace_links = True             #: True if URLs should be replaced with link markup inside this tag.
     replace_cosmetic = True          #: True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
-    strip = True                     #: True if leading and trailing whitespace should be stripped inside this tag.
+    strip = False                    #: True if leading and trailing whitespace should be stripped inside this tag.
     swallow_trailing_newline = False #: True if this tag should swallow the first trailing newline (i.e. for block elements).
 
     def __init__(self, tag_name, **kwargs):
@@ -56,12 +56,14 @@ class Parser (object):
         ('(tm)', '&trade;'),
     )
 
-    def __init__(self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True, replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None):
+    def __init__(self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True, replace_links=True, replace_cosmetic=True,
+                 tag_opener='[', tag_closer=']', linker=None, drop_unrecognized=False):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
         self.newline = newline
         self.normalize_newlines = normalize_newlines
         self.recognized_tags = {}
+        self.drop_unrecognized = drop_unrecognized
         self.escape_html = escape_html
         self.replace_cosmetic = replace_cosmetic
         self.replace_links = replace_links
@@ -127,9 +129,9 @@ class Parser (object):
             tag = 'ol' if list_type in css_opts else 'ul'
             css = ' style="list-style-type:%s;"' % css_opts[list_type] if list_type in css_opts else ''
             return '<%s%s>%s</%s>' % (tag, css, value, tag)
-        self.add_formatter('list', _render_list, transform_newlines=False)
-        self.add_simple_formatter('*', '<li>%(value)s</li>', newline_closes=True, same_tag_closes=True)
-        self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>')
+        self.add_formatter('list', _render_list, transform_newlines=False, strip=True)
+        self.add_simple_formatter('*', '<li>%(value)s</li>', newline_closes=True, same_tag_closes=True, strip=True)
+        self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>', strip=True)
         self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False)
         self.add_simple_formatter('center', '<div style="text-align:center;">%(value)s</div>')
         def _render_color(name, value, options, parent, context):
@@ -313,6 +315,9 @@ class Parser (object):
                             tokens.append((self.TOKEN_TAG_END, tag_name, None, tag))
                         else:
                             tokens.append((self.TOKEN_TAG_START, tag_name, opts, tag))
+                    elif valid and self.drop_unrecognized and tag_name not in self.recognized_tags:
+                        # If we found a valid (but unrecognized) tag and self.drop_unrecognized is True, just drop it.
+                        pass
                     else:
                         tokens.extend(self._newline_tokenize(tag))
                     pos = end + len(self.tag_closer)
