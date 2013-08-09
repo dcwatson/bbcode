@@ -135,15 +135,16 @@ class Parser (object):
         self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False)
         self.add_simple_formatter('center', '<div style="text-align:center;">%(value)s</div>')
         def _render_color(name, value, options, parent, context):
-            color = 'inherit'
             if 'color' in options:
                 color = options['color'].strip()
             elif options:
                 color = list(options.keys())[0].strip()
             else:
                 return value
+            match = re.match(r'^([a-z]+)|^(#[a-f0-9]{3,6})', color, re.I)
+            color = match.group() if match else 'inherit'
             return '<span style="color:%(color)s;">%(value)s</span>' % {
-                'color': self._replace(color, self.REPLACE_ESCAPE),
+                'color': color,
                 'value': value,
             }
         self.add_formatter('color', _render_color)

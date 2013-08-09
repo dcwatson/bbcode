@@ -31,7 +31,7 @@ class ParserTests (unittest.TestCase):
         ('[color red]this is red[/color]', '<span style="color:red;">this is red</span>'),
         ('[color]nothing[/color]', 'nothing'),
         ('[url="<script>alert(1);</script>"]xss[/url]', '<a href="&lt;script&gt;alert(1);&lt;/script&gt;">xss</a>'),
-        ('[color=<script></script>]xss[/color]', '<span style="color:&lt;script&gt;&lt;/script&gt;;">xss</span>'),
+        ('[color=<script></script>]xss[/color]', '<span style="color:inherit;">xss</span>'),
         # Known issue: since HTML is escaped first, the trailing &gt is captured by the URL regex.
         #('<http://foo.com/blah_blah>', '&lt;<a href="http://foo.com/blah_blah">http://foo.com/blah_blah</a>&gt;'),
         ('[COLOR=red]hello[/color]', '<span style="color:red;">hello</span>'),
@@ -47,6 +47,8 @@ class ParserTests (unittest.TestCase):
         ('[url=http://foo.com]<script>alert("XSS");</script>[/url]', '<a href="http://foo.com">&lt;script&gt;alert(&quot;XSS&quot;);&lt;/script&gt;</a>'),
         ('[url]123" onmouseover="alert(\'Hacked\');[/url]', '<a href="123&quot; onmouseover=&quot;alert(&#39;Hacked&#39;);">123&quot; onmouseover=&quot;alert(&#39;Hacked&#39;);</a>'),
         ('[code python]lambda code: [code] + [1, 2][/code]', '<code>lambda code: [code] + [1, 2]</code>'),
+        ('[color="red; font-size:1000px;"]test[/color]', '<span style="color:red;">test</span>'),
+        ('[color=#f4f4C3 barf]hi[/color]', '<span style="color:#f4f4C3;">hi</span>'),
     )
 
     URL_TESTS = """
