@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 13)
+__version_info__ = (1, 0, 14)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -15,16 +15,16 @@ _url_re = re.compile(r'(?im)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2
 _domain_re = re.compile(r'(?im)(?:www\d{0,3}[.]|[a-z0-9.\-]+[.](?:com|net|org|edu|biz|gov|mil|info|io|name|me|tv|us|uk|mobi))')
 
 class TagOptions (object):
-    tag_name = None                  #: The name of the tag, all lowercase.
-    newline_closes = False           #: True if a newline should automatically close this tag.
-    same_tag_closes = False          #: True if another start of the same tag should automatically close this tag.
-    standalone = False               #: True if this tag does not have a closing tag.
-    render_embedded = True           #: True if tags should be rendered inside this tag.
-    transform_newlines = True        #: True if newlines should be converted to markup.
-    escape_html = True               #: True if HTML characters (<, >, and &) should be escaped inside this tag.
-    replace_links = True             #: True if URLs should be replaced with link markup inside this tag.
-    replace_cosmetic = True          #: True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
-    strip = False                    #: True if leading and trailing whitespace should be stripped inside this tag.
+    tag_name = None #: The name of the tag, all lowercase.
+    newline_closes = False #: True if a newline should automatically close this tag.
+    same_tag_closes = False #: True if another start of the same tag should automatically close this tag.
+    standalone = False #: True if this tag does not have a closing tag.
+    render_embedded = True #: True if tags should be rendered inside this tag.
+    transform_newlines = True #: True if newlines should be converted to markup.
+    escape_html = True #: True if HTML characters (<, >, and &) should be escaped inside this tag.
+    replace_links = True #: True if URLs should be replaced with link markup inside this tag.
+    replace_cosmetic = True #: True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
+    strip = False #: True if leading and trailing whitespace should be stripped inside this tag.
     swallow_trailing_newline = False #: True if this tag should swallow the first trailing newline (i.e. for block elements).
 
     def __init__(self, tag_name, **kwargs):
@@ -130,9 +130,10 @@ class Parser (object):
             css = ' style="list-style-type:%s;"' % css_opts[list_type] if list_type in css_opts else ''
             return '<%s%s>%s</%s>' % (tag, css, value, tag)
         self.add_formatter('list', _render_list, transform_newlines=False, strip=True)
-        self.add_simple_formatter('*', '<li>%(value)s</li>', newline_closes=True, same_tag_closes=True, strip=True)
+        # Make sure transform_newlines = False for [*], so [code] tags can be embedded without transformation.
+        self.add_simple_formatter('*', '<li>%(value)s</li>', newline_closes=True, transform_newlines=False, same_tag_closes=True, strip=True)
         self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>', strip=True)
-        self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False)
+        self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False, transform_newlines=False, swallow_trailing_newline=True)
         self.add_simple_formatter('center', '<div style="text-align:center;">%(value)s</div>')
         def _render_color(name, value, options, parent, context):
             if 'color' in options:
@@ -343,9 +344,20 @@ class Parser (object):
         whether the ending token should be consumed or not.
         """
         embed_count = 0
+        block_count = 0
         while pos < len(tokens):
             token_type, tag_name, tag_opts, token_text = tokens[pos]
-            if token_type == self.TOKEN_NEWLINE and tag.newline_closes:
+            if tag.newline_closes and token_type in (self.TOKEN_TAG_START, self.TOKEN_TAG_END):
+                # If we're finding the closing token for a tag that is closed by newlines, but
+                # there is an embedded tag that doesn't transform newlines (i.e. a code tag
+                # that keeps newlines intact), we need to skip over that.
+                inner_tag = self.recognized_tags[tag_name][1]
+                if not inner_tag.transform_newlines:
+                    if token_type == self.TOKEN_TAG_START:
+                        block_count += 1
+                    else:
+                        block_count -= 1
+            if token_type == self.TOKEN_NEWLINE and tag.newline_closes and block_count == 0:
                 # If for some crazy reason there are embedded tags that both close on newline,
                 # the first newline will automatically close all those nested tags.
                 return pos, True
