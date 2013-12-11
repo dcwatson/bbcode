@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 14)
+__version_info__ = (1, 0, 15)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -129,10 +129,10 @@ class Parser (object):
             tag = 'ol' if list_type in css_opts else 'ul'
             css = ' style="list-style-type:%s;"' % css_opts[list_type] if list_type in css_opts else ''
             return '<%s%s>%s</%s>' % (tag, css, value, tag)
-        self.add_formatter('list', _render_list, transform_newlines=False, strip=True)
+        self.add_formatter('list', _render_list, transform_newlines=False, strip=True, swallow_trailing_newline=True)
         # Make sure transform_newlines = False for [*], so [code] tags can be embedded without transformation.
         self.add_simple_formatter('*', '<li>%(value)s</li>', newline_closes=True, transform_newlines=False, same_tag_closes=True, strip=True)
-        self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>', strip=True)
+        self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>', strip=True, swallow_trailing_newline=True)
         self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False, transform_newlines=False, swallow_trailing_newline=True)
         self.add_simple_formatter('center', '<div style="text-align:center;">%(value)s</div>')
         def _render_color(name, value, options, parent, context):
