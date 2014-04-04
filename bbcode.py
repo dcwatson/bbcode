@@ -57,7 +57,7 @@ class Parser (object):
     )
 
     def __init__(self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True, replace_links=True, replace_cosmetic=True,
-                 tag_opener='[', tag_closer=']', linker=None, linker_reentrant=False, drop_unrecognized=False):
+                 tag_opener='[', tag_closer=']', linker=None, linker_takes_context=False, drop_unrecognized=False):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
         self.newline = newline
@@ -68,7 +68,7 @@ class Parser (object):
         self.replace_cosmetic = replace_cosmetic
         self.replace_links = replace_links
         self.linker = linker
-        self.linker_reentrant = linker_reentrant
+        self.linker_takes_context = linker_takes_context
         if install_defaults:
             self.install_default_formatters()
 
@@ -379,11 +379,11 @@ class Parser (object):
         """
         Callback for re.sub to replace link text with markup. Turns out using a callback function
         is actually faster than using backrefs, plus this lets us provide a hook for user customization.
-        linker_reentrant=True means that the linker gets passed context like a standard format function.
+        linker_takes_context=True means that the linker gets passed context like a standard format function.
         """
         url = match.group(0)
         if self.linker:
-            if self.linker_reentrant:
+            if self.linker_takes_context:
                 return self.linker(url, context)
             else:
                 return self.linker(url)
