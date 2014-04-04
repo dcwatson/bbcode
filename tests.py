@@ -108,12 +108,12 @@ class ParserTests (unittest.TestCase):
             return '<a href="%s" target="_blank">%s</a>' % (url, context["substitution"])
         def _link(url):
             return _contextual_link(url, {"substitution": url})
-        # Test nonreentrant linker
+        # Test noncontextual linker
         p = bbcode.Parser(linker=_link)
         s = p.format('hello www.apple.com world')
         self.assertEqual(s, 'hello <a href="www.apple.com" target="_blank">www.apple.com</a> world')
-        # Test reentrant linker
-        p = bbcode.Parser(linker=_contextual_link, linker_reentrant=True)
+        # Test contextual linker
+        p = bbcode.Parser(linker=_contextual_link, linker_takes_context=True)
         s = p.format('hello www.apple.com world', substitution="oh hai")
         self.assertEqual(s, 'hello <a href="www.apple.com" target="_blank">oh hai</a> world')
 
