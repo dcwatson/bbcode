@@ -57,7 +57,7 @@ class Parser (object):
     )
 
     def __init__(self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True, replace_links=True, replace_cosmetic=True,
-                 tag_opener='[', tag_closer=']', linker=None, drop_unrecognized=False):
+                 tag_opener='[', tag_closer=']', linker=None, linker_takes_context=False, drop_unrecognized=False):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
         self.newline = newline
@@ -68,6 +68,7 @@ class Parser (object):
         self.replace_cosmetic = replace_cosmetic
         self.replace_links = replace_links
         self.linker = linker
+        self.linker_takes_context = linker_takes_context
         if install_defaults:
             self.install_default_formatters()
 
@@ -374,21 +375,25 @@ class Parser (object):
             pos += 1
         return pos, True
 
-    def _link_replace(self, match):
+    def _link_replace(self, match, **context):
         """
         Callback for re.sub to replace link text with markup. Turns out using a callback function
         is actually faster than using backrefs, plus this lets us provide a hook for user customization.
+        linker_takes_context=True means that the linker gets passed context like a standard format function.
         """
         url = match.group(0)
         if self.linker:
-            return self.linker(url)
+            if self.linker_takes_context:
+                return self.linker(url, context)
+            else:
+                return self.linker(url)
         else:
             href = url
             if '://' not in href:
                 href = 'http://' + href
             return '<a href="%s">%s</a>' % (href, url)
 
-    def _transform(self, data, escape_html, replace_links, replace_cosmetic):
+    def _transform(self, data, escape_html, replace_links, replace_cosmetic, **context):
         """
         Transforms the input string based on the options specified, taking into account
         whether the option is enabled globally for this parser.
@@ -404,7 +409,7 @@ class Parser (object):
                     break
                 # Replace any link with a token that we can substitute back in after replacements.
                 token = '{{ bbcode-link-%s }}' % id(match)
-                url_matches[token] = self._link_replace(match)
+                url_matches[token] = self._link_replace(match, **context)
                 start, end = match.span()
                 data = data[:start] + token + data[end:]
                 # To be perfectly accurate, this should probably be len(data[:start] + token), but
@@ -440,7 +445,7 @@ class Parser (object):
                         inner = self._format_tokens(subtokens, tag, **context)
                     else:
                         # Otherwise, just concatenate all the token text.
-                        inner = self._transform(''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic)
+                        inner = self._transform(''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic, **context)
                     # Strip and replace newlines, if necessary.
                     if tag.strip:
                         inner = inner.strip()
@@ -462,7 +467,7 @@ class Parser (object):
                 escape = self.escape_html if parent is None else parent.escape_html
                 links = self.replace_links if parent is None else parent.replace_links
                 cosmetic = self.replace_cosmetic if parent is None else parent.replace_cosmetic
-                formatted.append(self._transform(token_text, escape, links, cosmetic))
+                formatted.append(self._transform(token_text, escape, links, cosmetic, **context))
             idx += 1
         return ''.join(formatted)
 
