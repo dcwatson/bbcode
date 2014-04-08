@@ -50,6 +50,9 @@ class ParserTests (unittest.TestCase):
         ('[color="red; font-size:1000px;"]test[/color]', '<span style="color:red;">test</span>'),
         ('[color=#f4f4C3 barf]hi[/color]', '<span style="color:#f4f4C3;">hi</span>'),
         ('[list]\n[*]item with[code]some\ncode[/code] and text after[/list]', '<ul><li>item with<code>some\ncode</code> and text after</li></ul>'),
+        ('x[sub]test[/sub]y', 'x<sub>test</sub>y'),
+        ('x[sup]3[/sup] + 7', 'x<sup>3</sup> + 7'),
+        ('line one[hr]line two', 'line one<hr />line two'),
     )
 
     URL_TESTS = """

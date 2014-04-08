@@ -10,10 +10,10 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-
-.. automodule:: bbcode
-   :members:
-   :undoc-members:
+   
+   usage
+   tags
+   formatters
 
 
 Indices and tables
