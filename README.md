@@ -1,27 +1,29 @@
-Installing
-==========
+Overview
+========
 
-The easiest way to install the bbcode module is via PyPI, e.g.:
+| What           | Where           |
+|:--------------:|:---------------:|
+| Latest Package | http://pypi.python.org/pypi/bbcode |
+| Source Code    | https://github.com/dcwatson/bbcode |
+| Documentation  | http://bbcode.readthedocs.org/ |
+
+
+Installation
+============
+
+The easiest way to install the bbcode module is with pip, e.g.:
 
     pip install bbcode
-
-You can download the latest package from:
-
-    http://pypi.python.org/pypi/bbcode
-
-Or view the source on GitHub:
-
-    https://github.com/dcwatson/bbcode
 
 
 Requirements
 ============
 
-Python, tested with versions 2.5 through 3.3.
+Python, tested with versions 2.6 through 3.4.
 
 
-Usage
-=====
+Basic Usage
+===========
 
     # Using the default parser.
     import bbcode
@@ -45,8 +47,8 @@ Usage
     html = parser.format(text, somevar='somevalue')
 
 
-Advantages Over Postmarkup
-==========================
+Advantages Over [Postmarkup](https://code.google.com/p/postmarkup/)
+===================================================================
 
 * More tag options for how/when to escape - for instance, you can specify
   whether to escape html or perform cosmetic replacements on a tag-by-tag
