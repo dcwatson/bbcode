@@ -53,6 +53,7 @@ class ParserTests (unittest.TestCase):
         ('x[sub]test[/sub]y', 'x<sub>test</sub>y'),
         ('x[sup]3[/sup] + 7', 'x<sup>3</sup> + 7'),
         ('line one[hr]line two', 'line one<hr />line two'),
+        ('hello :[ world', 'hello :[ world'),
     )
 
     URL_TESTS = """

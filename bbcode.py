@@ -306,6 +306,7 @@ class Parser (object):
                 if start > pos:
                     tl = self._newline_tokenize(data[pos:start])
                     tokens.extend(tl)
+                    pos = start
                 end = data.find(self.tag_closer, start)
                 # Check to see if another tag opens before this one closes.
                 new_check = data.find(self.tag_opener, start + len(self.tag_opener))
