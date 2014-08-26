@@ -64,7 +64,7 @@ The linker is a function that gets called to replace URLs with markup. It takes 
         return '<a href="%s">%s</a>' % (href, url)
 
     parser = bbcode.Parser(linker=my_linker)
-    parser.render('www.apple.com') # returns <a href="http://www.apple.com">www.apple.com</a>
+    parser.format('www.apple.com') # returns <a href="http://www.apple.com">www.apple.com</a>
 
 For an example of a linker that may want the render context, imagine a linker that routes all clicks through a local URL::
 
@@ -76,4 +76,4 @@ For an example of a linker that may want the render context, imagine a linker th
         return '<a href="%s">%s</a>' % (redir_url, url)
 
     parser = bbcode.Parser(linker=my_linker, linker_takes_context=True)
-    parser.render('www.apple.com', request=request)
+    parser.format('www.apple.com', request=request)
