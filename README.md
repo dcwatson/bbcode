@@ -7,6 +7,8 @@ Overview
 | Source Code    | https://github.com/dcwatson/bbcode |
 | Documentation  | http://bbcode.readthedocs.org/ |
 
+[![Build Status](https://travis-ci.org/dcwatson/bbcode.svg?branch=master)](https://travis-ci.org/dcwatson/bbcode)
+
 
 Installation
 ============
