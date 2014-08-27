@@ -54,6 +54,8 @@ class ParserTests (unittest.TestCase):
         ('x[sup]3[/sup] + 7', 'x<sup>3</sup> + 7'),
         ('line one[hr]line two', 'line one<hr />line two'),
         ('hello :[ world', 'hello :[ world'),
+        ('[url]javascript:alert("XSS");[/url]', ''),
+        ('http://www.google.com"onmousemove="alert(\'XSS\');"', '<a href="http://www.google.com%22onmousemove=%22alert(\'XSS\')">http://www.google.com"onmousemove="alert(\'XSS\')</a>;&quot;'),
     )
 
     URL_TESTS = """

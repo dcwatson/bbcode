@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 16)
+__version_info__ = (1, 0, 17)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -159,10 +159,13 @@ class Parser (object):
                 href = self._replace(options['url'], self.REPLACE_ESCAPE)
             else:
                 href = value
+            # Completely ignore javascript: "links".
+            if href.strip().lower().startswith('javascript:'):
+                return ''
             # Only add the missing http:// if it looks like it starts with a domain name.
             if '://' not in href and _domain_re.match(href):
                 href = 'http://' + href
-            return '<a href="%s">%s</a>' % (href, value)
+            return '<a href="%s">%s</a>' % (href.replace('"', '%22'), value)
         self.add_formatter('url', _render_url, replace_links=False, replace_cosmetic=False)
 
     def _replace(self, data, replacements):
@@ -395,7 +398,8 @@ class Parser (object):
             href = url
             if '://' not in href:
                 href = 'http://' + href
-            return '<a href="%s">%s</a>' % (href, url)
+            # Escape quotes to avoid XSS, let the browser escape the rest.
+            return '<a href="%s">%s</a>' % (href.replace('"', '%22'), url)
 
     def _transform(self, data, escape_html, replace_links, replace_cosmetic, **context):
         """
