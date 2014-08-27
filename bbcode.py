@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 17)
+__version_info__ = (1, 0, 18)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -159,8 +159,8 @@ class Parser (object):
                 href = self._replace(options['url'], self.REPLACE_ESCAPE)
             else:
                 href = value
-            # Completely ignore javascript: "links".
-            if href.strip().lower().startswith('javascript:'):
+            # Completely ignore javascript: and data: "links".
+            if href.strip().lower().split(':', 1)[0] in ('javascript', 'data'):
                 return ''
             # Only add the missing http:// if it looks like it starts with a domain name.
             if '://' not in href and _domain_re.match(href):
