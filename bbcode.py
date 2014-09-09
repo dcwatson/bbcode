@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 18)
+__version_info__ = (1, 0, 19)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -219,7 +219,7 @@ class Parser (object):
         for pos, ch in enumerate(data.strip()):
             if in_value:
                 if in_quote:
-                    if ch == '"':
+                    if ch == in_quote:
                         in_quote = False
                         in_value = False
                         if attr:
@@ -229,8 +229,8 @@ class Parser (object):
                     else:
                         value += ch
                 else:
-                    if ch == '"':
-                        in_quote = True
+                    if ch in ('"', "'"):
+                        in_quote = ch
                     elif ch == ' ' and data.find('=', pos + 1) > 0:
                         # If there is no = after this, the value may accept spaces.
                         opts[attr.lower()] = value.strip()
@@ -283,6 +283,25 @@ class Parser (object):
             tag_name, opts = self._parse_opts(tag_name)
         return (True, tag_name.strip().lower(), closer, opts)
 
+    def _tag_extent(self, data, start):
+        """
+        Finds the extent of a tag, accounting for option quoting and new tags starting before the current one closes.
+        Returns (found_close, end_pos) where valid is False if another tag started before this one closed.
+        """
+        in_quote = False
+        for i in range(start + 1, len(data)):
+            ch = data[i]
+            if ch in ('"', "'"):
+                if not in_quote:
+                    in_quote = ch
+                elif in_quote == ch:
+                    in_quote = False
+            if not in_quote and data[i:i + len(self.tag_opener)] == self.tag_opener:
+                return i, False
+            if not in_quote and data[i:i + len(self.tag_closer)] == self.tag_closer:
+                return i + len(self.tag_closer), True
+        return len(data), False
+
     def tokenize(self, data):
         """
         Tokenizes the given string. A token is a 4-tuple of the form:
@@ -310,14 +329,11 @@ class Parser (object):
                     tl = self._newline_tokenize(data[pos:start])
                     tokens.extend(tl)
                     pos = start
-                end = data.find(self.tag_closer, start)
-                # Check to see if another tag opens before this one closes.
-                new_check = data.find(self.tag_opener, start + len(self.tag_opener))
-                if new_check > 0 and new_check < end:
-                    tokens.extend(self._newline_tokenize(data[start:new_check]))
-                    pos = new_check
-                elif end > start:
-                    tag = data[start:end + len(self.tag_closer)]
+
+                # Find the extent of this tag, if it's ever closed.
+                end, found_close = self._tag_extent(data, start)
+                if found_close:
+                    tag = data[start:end]
                     valid, tag_name, closer, opts = self._parse_tag(tag)
                     # Make sure this is a well-formed, recognized tag, otherwise it's just data.
                     if valid and tag_name in self.recognized_tags:
@@ -330,10 +346,10 @@ class Parser (object):
                         pass
                     else:
                         tokens.extend(self._newline_tokenize(tag))
-                    pos = end + len(self.tag_closer)
                 else:
-                    # An unmatched [
-                    break
+                    # We didn't find a closing tag, tack it on as text.
+                    tokens.extend(self._newline_tokenize(data[start:end]))
+                pos = end
             else:
                 # No more tags left to parse.
                 break

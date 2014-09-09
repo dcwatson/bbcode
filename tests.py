@@ -57,6 +57,8 @@ class ParserTests (unittest.TestCase):
         ('[url]javascript:alert("XSS");[/url]', ''),
         ('http://www.google.com"onmousemove="alert(\'XSS\');"', '<a href="http://www.google.com%22onmousemove=%22alert(\'XSS\')">http://www.google.com"onmousemove="alert(\'XSS\')</a>;&quot;'),
         ('[url=data:text/html;base64,PHNjcmlwdD5hbGVydCgiMSIpOzwvc2NyaXB0Pg==]xss[/url]', ''),
+        ("[color='red']single[/color]", '<span style="color:red;">single</span>'),
+        ('[quote author="name][clan"]blah[/quote]', '<blockquote>blah</blockquote>'),
     )
 
     URL_TESTS = """
@@ -102,6 +104,9 @@ class ParserTests (unittest.TestCase):
         tag_name, opts = self.parser._parse_opts('quote = Watson, Dan')
         self.assertEqual(tag_name, 'quote')
         self.assertEqual(opts, {'quote': 'Watson, Dan'})
+        tag_name, opts = self.parser._parse_opts("""Quote='Dan "Darsh" Watson'""")
+        self.assertEqual(tag_name, 'quote')
+        self.assertEqual(opts, {'quote': 'Dan "Darsh" Watson'})
 
     def test_strip(self):
         result = self.parser.strip('[b]hello \n[i]world[/i][/b] -- []', strip_newlines=True)
