@@ -59,6 +59,7 @@ class ParserTests (unittest.TestCase):
         ('[url=data:text/html;base64,PHNjcmlwdD5hbGVydCgiMSIpOzwvc2NyaXB0Pg==]xss[/url]', ''),
         ("[color='red']single[/color]", '<span style="color:red;">single</span>'),
         ('[quote author="name][clan"]blah[/quote]', '<blockquote>blah</blockquote>'),
+        ('http://github.com/ http://example.org http://github.com/dcwatson/', '<a href="http://github.com/">http://github.com/</a> <a href="http://example.org">http://example.org</a> <a href="http://github.com/dcwatson/">http://github.com/dcwatson/</a>'),
     )
 
     URL_TESTS = """

@@ -432,7 +432,7 @@ class Parser (object):
                 if not match:
                     break
                 # Replace any link with a token that we can substitute back in after replacements.
-                token = '{{ bbcode-link-%s }}' % id(match)
+                token = '{{ bbcode-link-%s }}' % len(url_matches)
                 url_matches[token] = self._link_replace(match, **context)
                 start, end = match.span()
                 data = data[:start] + token + data[end:]
