@@ -160,7 +160,7 @@ class Parser (object):
             else:
                 href = value
             # Completely ignore javascript: and data: "links".
-            if href.strip().lower().split(':', 1)[0] in ('javascript', 'data'):
+            if re.sub(r'[^a-z0-9+]', '', href.lower().split(':', 1)[0]) in ('javascript', 'data', 'vbscript'):
                 return ''
             # Only add the missing http:// if it looks like it starts with a domain name.
             if '://' not in href and _domain_re.match(href):
