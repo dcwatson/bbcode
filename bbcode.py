@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 21)
+__version_info__ = (1, 0, 22)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -56,8 +56,9 @@ class Parser (object):
         ('(tm)', '&trade;'),
     )
 
-    def __init__(self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True, replace_links=True, replace_cosmetic=True,
-                 tag_opener='[', tag_closer=']', linker=None, linker_takes_context=False, drop_unrecognized=False):
+    def __init__(self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True,
+                 replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None,
+                 linker_takes_context=False, drop_unrecognized=False):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
         self.newline = newline
@@ -135,9 +136,12 @@ class Parser (object):
             return '<%s%s>%s</%s>' % (tag, css, value, tag)
         self.add_formatter('list', _render_list, transform_newlines=False, strip=True, swallow_trailing_newline=True)
         # Make sure transform_newlines = False for [*], so [code] tags can be embedded without transformation.
-        self.add_simple_formatter('*', '<li>%(value)s</li>', newline_closes=True, transform_newlines=False, same_tag_closes=True, strip=True)
-        self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>', strip=True, swallow_trailing_newline=True)
-        self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False, transform_newlines=False, swallow_trailing_newline=True)
+        self.add_simple_formatter('*', '<li>%(value)s</li>', newline_closes=True, transform_newlines=False,
+            same_tag_closes=True, strip=True)
+        self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>', strip=True,
+            swallow_trailing_newline=True)
+        self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False, transform_newlines=False,
+            swallow_trailing_newline=True)
         self.add_simple_formatter('center', '<div style="text-align:center;">%(value)s</div>')
         def _render_color(name, value, options, parent, context):
             if 'color' in options:
@@ -289,13 +293,17 @@ class Parser (object):
         Returns (found_close, end_pos) where valid is False if another tag started before this one closed.
         """
         in_quote = False
+        quotable = False
         for i in range(start + 1, len(data)):
             ch = data[i]
+            if ch == '=':
+                quotable = True
             if ch in ('"', "'"):
-                if not in_quote:
+                if quotable and not in_quote:
                     in_quote = ch
                 elif in_quote == ch:
                     in_quote = False
+                    quotable = False
             if not in_quote and data[i:i + len(self.tag_opener)] == self.tag_opener:
                 return i, False
             if not in_quote and data[i:i + len(self.tag_closer)] == self.tag_closer:
@@ -469,7 +477,8 @@ class Parser (object):
                         inner = self._format_tokens(subtokens, tag, **context)
                     else:
                         # Otherwise, just concatenate all the token text.
-                        inner = self._transform(''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links, tag.replace_cosmetic, **context)
+                        inner = self._transform(''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links,
+                            tag.replace_cosmetic, **context)
                     # Strip and replace newlines, if necessary.
                     if tag.strip:
                         inner = inner.strip()

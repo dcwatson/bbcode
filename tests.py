@@ -63,6 +63,7 @@ class ParserTests (unittest.TestCase):
         ("[color='red']single[/color]", '<span style="color:red;">single</span>'),
         ('[quote author="name][clan"]blah[/quote]', '<blockquote>blah</blockquote>'),
         ('http://github.com/ http://example.org http://github.com/dcwatson/', '<a href="http://github.com/">http://github.com/</a> <a href="http://example.org">http://example.org</a> <a href="http://github.com/dcwatson/">http://github.com/dcwatson/</a>'),
+        ('[b]Hello, [wor"ld][/b] out', '<strong>Hello, [wor&quot;ld]</strong> out'),
     )
 
     URL_TESTS = """
