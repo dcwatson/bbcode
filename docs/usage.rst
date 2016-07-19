@@ -21,9 +21,6 @@ The bbcode ``Parser`` class takes several options when creating:
 newline (default: ``'<br />'``)
     What to replace newlines with.
 
-normalize_newlines (default: ``True``)
-    Whether to convert CR and CRLF to LF before replacements.
-
 install_defaults (default: ``True``)
     Whether to install the default tag formatters. If False, you will need to specify add tag formatters yourself.
 

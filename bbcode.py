@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 22)
+__version_info__ = (1, 0, 23)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -56,13 +56,12 @@ class Parser (object):
         ('(tm)', '&trade;'),
     )
 
-    def __init__(self, newline='<br />', normalize_newlines=True, install_defaults=True, escape_html=True,
+    def __init__(self, newline='<br />', install_defaults=True, escape_html=True,
                  replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None,
                  linker_takes_context=False, drop_unrecognized=False):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
         self.newline = newline
-        self.normalize_newlines = normalize_newlines
         self.recognized_tags = {}
         self.drop_unrecognized = drop_unrecognized
         self.escape_html = escape_html
@@ -325,8 +324,7 @@ class Parser (object):
             token_text
                 The original token text
         """
-        if self.normalize_newlines:
-            data = data.replace('\r\n', '\n').replace('\r', '\n')
+        data = data.replace('\r\n', '\n').replace('\r', '\n')
         pos = start = end = 0
         tokens = []
         while pos < len(data):
@@ -425,7 +423,7 @@ class Parser (object):
             # Escape quotes to avoid XSS, let the browser escape the rest.
             return '<a href="%s">%s</a>' % (href.replace('"', '%22'), url)
 
-    def _transform(self, data, escape_html, replace_links, replace_cosmetic, **context):
+    def _transform(self, data, escape_html, replace_links, replace_cosmetic, transform_newlines, **context):
         """
         Transforms the input string based on the options specified, taking into account
         whether the option is enabled globally for this parser.
@@ -454,6 +452,8 @@ class Parser (object):
         # Now put the replaced links back in the text.
         for token, replacement in url_matches.items():
             data = data.replace(token, replacement)
+        if transform_newlines:
+            data = data.replace('\n', '\r')
         return data
 
     def _format_tokens(self, tokens, parent, **context):
@@ -478,12 +478,9 @@ class Parser (object):
                     else:
                         # Otherwise, just concatenate all the token text.
                         inner = self._transform(''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links,
-                            tag.replace_cosmetic, **context)
-                    # Strip and replace newlines, if necessary.
+                            tag.replace_cosmetic, tag.transform_newlines, **context)
                     if tag.strip:
                         inner = inner.strip()
-                    if tag.transform_newlines:
-                        inner = inner.replace('\n', self.newline)
                     # Append the rendered contents.
                     formatted.append(render_func(tag_name, inner, tag_opts, parent, context))
                     # If the tag should swallow the first trailing newline, check the token after the closing token.
@@ -495,12 +492,13 @@ class Parser (object):
                     idx = end
             elif token_type == self.TOKEN_NEWLINE:
                 # If this is a top-level newline, replace it. Otherwise, it will be replaced (if necessary) by the code above.
-                formatted.append(self.newline if parent is None else token_text)
+                formatted.append('\r' if parent is None or parent.transform_newlines else token_text)
             elif token_type == self.TOKEN_DATA:
                 escape = self.escape_html if parent is None else parent.escape_html
                 links = self.replace_links if parent is None else parent.replace_links
                 cosmetic = self.replace_cosmetic if parent is None else parent.replace_cosmetic
-                formatted.append(self._transform(token_text, escape, links, cosmetic, **context))
+                transform_newlines = True if parent is None else parent.transform_newlines
+                formatted.append(self._transform(token_text, escape, links, cosmetic, transform_newlines, **context))
             idx += 1
         return ''.join(formatted)
 
@@ -510,7 +508,7 @@ class Parser (object):
         given here will be passed along to the render functions as a context dictionary.
         """
         tokens = self.tokenize(data)
-        return self._format_tokens(tokens, None, **context)
+        return self._format_tokens(tokens, None, **context).replace('\r', self.newline)
 
     def strip(self, data, strip_newlines=False):
         """
