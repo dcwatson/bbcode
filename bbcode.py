@@ -1,9 +1,15 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 23)
+__version_info__ = (1, 0, 24)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
+import sys
+
+PY3 = sys.version_info[0] == 3
+
+if PY3:
+    xrange = range
 
 # Adapted from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
 # Changed to only support one level of parentheses, since it was failing catastrophically on some URLs.
@@ -293,7 +299,9 @@ class Parser (object):
         """
         in_quote = False
         quotable = False
-        for i in range(start + 1, len(data)):
+        lto = len(self.tag_opener)
+        ltc = len(self.tag_closer)
+        for i in xrange(start + 1, len(data)):
             ch = data[i]
             if ch == '=':
                 quotable = True
@@ -303,10 +311,10 @@ class Parser (object):
                 elif in_quote == ch:
                     in_quote = False
                     quotable = False
-            if not in_quote and data[i:i + len(self.tag_opener)] == self.tag_opener:
+            if not in_quote and data[i:i + lto] == self.tag_opener:
                 return i, False
-            if not in_quote and data[i:i + len(self.tag_closer)] == self.tag_closer:
-                return i + len(self.tag_closer), True
+            if not in_quote and data[i:i + ltc] == self.tag_closer:
+                return i + ltc, True
         return len(data), False
 
     def tokenize(self, data):
@@ -326,8 +334,9 @@ class Parser (object):
         """
         data = data.replace('\r\n', '\n').replace('\r', '\n')
         pos = start = end = 0
+        ld = len(data)
         tokens = []
-        while pos < len(data):
+        while pos < ld:
             start = data.find(self.tag_opener, pos)
             if start >= pos:
                 # Check to see if there was data between this start and the last end.
@@ -359,7 +368,7 @@ class Parser (object):
             else:
                 # No more tags left to parse.
                 break
-        if pos < len(data):
+        if pos < ld:
             tl = self._newline_tokenize(data[pos:])
             tokens.extend(tl)
         return tokens
@@ -375,7 +384,8 @@ class Parser (object):
         """
         embed_count = 0
         block_count = 0
-        while pos < len(tokens):
+        lt = len(tokens)
+        while pos < lt:
             token_type, tag_name, tag_opts, token_text = tokens[pos]
             if tag.newline_closes and token_type in (self.TOKEN_TAG_START, self.TOKEN_TAG_END):
                 # If we're finding the closing token for a tag that is closed by newlines, but
@@ -459,7 +469,8 @@ class Parser (object):
     def _format_tokens(self, tokens, parent, **context):
         idx = 0
         formatted = []
-        while idx < len(tokens):
+        lt = len(tokens)
+        while idx < lt:
             token_type, tag_name, tag_opts, token_text = tokens[idx]
             if token_type == self.TOKEN_TAG_START:
                 render_func, tag = self.recognized_tags[tag_name]
