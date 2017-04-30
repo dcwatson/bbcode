@@ -225,14 +225,23 @@ class Parser (object):
         attr = ''
         value = ''
         attr_done = False
-        for pos, ch in enumerate(data.strip()):
+        stripped = data.strip()
+        ls = len(stripped)
+        pos = 0
+
+        while pos < ls:
+            ch = stripped[pos]
             if in_value:
                 if in_quote:
-                    if ch == in_quote:
+                    if ch == '\\' and ls > pos+1 and stripped[pos+1] in ('\\', '"', "'"):
+                        value += stripped[pos+1]
+                        pos += 1
+                    elif ch == in_quote:
                         in_quote = False
                         in_value = False
                         if attr:
-                            opts[attr.lower()] = value.strip()
+                            value = value.strip().replace('\\"', '"').replace("\\'", "'")
+                            opts[attr.lower()] = value
                         attr = ''
                         value = ''
                     else:
@@ -265,6 +274,8 @@ class Parser (object):
                         attr = ''
                         attr_done = False
                     attr += ch
+            pos += 1
+
         if attr:
             if name is None:
                 name = attr
