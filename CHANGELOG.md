@@ -1,3 +1,7 @@
+### 1.0.25
+
+* Allow escaping quotes in tag options using backslash, i.e. `[quote='Sinéad O\'Connor']`
+
 ### 1.0.11
 
 * TagOptions now defaults to strip=False (see #7). list and quote tags have been set to strip=True, as they are typically block-level elements anyway.

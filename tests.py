@@ -113,21 +113,21 @@ class ParserTests (unittest.TestCase):
         tag_name, opts = self.parser._parse_opts("""Quote='Dan "Darsh" Watson'""")
         self.assertEqual(tag_name, 'quote')
         self.assertEqual(opts, {'quote': 'Dan "Darsh" Watson'})
-
         # combine single and double quotes in a value
         tag_name, opts = self.parser._parse_opts("quote='Lan \"Please Don\\\'t\" Rogers'")
         self.assertEqual(tag_name, 'quote')
         self.assertEqual(opts, {'quote': 'Lan "Please Don\'t" Rogers'})
-
         # Ensure backslash is still representable
-        tag_name, opts = self.parser._parse_opts("quote='\\\\'")
+        tag_name, opts = self.parser._parse_opts("""quote='\\\\"q\\\\"'""")
         self.assertEqual(tag_name, 'quote')
-        self.assertEqual(opts, {'quote': '\\'})
-
+        self.assertEqual(opts, {'quote': '\\"q\\"'})
         # Make sure lookahead for unescaping doesn't go OOB
         tag_name, opts = self.parser._parse_opts("quote='\\")
         self.assertEqual(tag_name, 'quote')
         self.assertEqual(opts, {'quote': '\\'})
+        tag_name, opts = self.parser._parse_opts("quote=Back\\Slash")
+        self.assertEqual(tag_name, 'quote')
+        self.assertEqual(opts, {'quote': 'Back\\Slash'})
 
     def test_strip(self):
         result = self.parser.strip('[b]hello \n[i]world[/i][/b] -- []', strip_newlines=True)

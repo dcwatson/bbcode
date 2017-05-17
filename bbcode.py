@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 24)
+__version_info__ = (1, 0, 25)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -240,8 +240,7 @@ class Parser (object):
                         in_quote = False
                         in_value = False
                         if attr:
-                            value = value.strip().replace('\\"', '"').replace("\\'", "'")
-                            opts[attr.lower()] = value
+                            opts[attr.lower()] = value.strip()
                         attr = ''
                         value = ''
                     else:
