@@ -65,6 +65,7 @@ class ParserTests (unittest.TestCase):
         ('http://github.com/ http://example.org http://github.com/dcwatson/', '<a href="http://github.com/">http://github.com/</a> <a href="http://example.org">http://example.org</a> <a href="http://github.com/dcwatson/">http://github.com/dcwatson/</a>'),
         ('[b]Hello, [wor"ld][/b] out', '<strong>Hello, [wor&quot;ld]</strong> out'),
         ('[center]a\nb[code]c\nd[/code]\ne\nf\n', '<div style="text-align:center;">a<br />b<code>c\nd</code>e<br />f<br /></div>'),
+        ('<a id="test">[b]test[/b]</a>', '&lt;a id=&quot;test&quot;&gt;<strong>test</strong>&lt;/a&gt;'),
     )
 
     URL_TESTS = """
@@ -163,6 +164,13 @@ class ParserTests (unittest.TestCase):
             src = unicode('[center]ƒünk¥ • §tüƒƒ[/center]', 'utf-8')
             dst = unicode('<div style="text-align:center;">ƒünk¥ • §tüƒƒ</div>', 'utf-8')
         self.assertEqual(self.parser.format(src), dst)
+
+    def test_format_overrides(self):
+        formatted = self.parser.format('<a id="test">[b]test[/b]</a>', escape_html=False)
+        self.assertEqual(formatted, '<a id="test"><strong>test</strong></a>')
+        formatted = self.parser.format('<a href="http://www.apple.com">Apple(c)</a>', escape_html=False, replace_links=False)
+        self.assertEqual(formatted, '<a href="http://www.apple.com">Apple&copy;</a>')
+
 
 if __name__ == '__main__':
     unittest.main()

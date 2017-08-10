@@ -1,3 +1,7 @@
+### 1.0.26
+
+* Allow overriding parser's `replace_html`, `replace_links`, and `replace_cosmetic` on `format` calls.
+
 ### 1.0.25
 
 * Allow escaping quotes in tag options using backslash, i.e. `[quote='Sinéad O\'Connor']`

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 25)
+__version_info__ = (1, 0, 26)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -465,9 +465,9 @@ class Parser (object):
                 # To be perfectly accurate, this should probably be len(data[:start] + token), but
                 # start will work, because the token itself won't match as a URL.
                 pos = start
-        if self.escape_html and escape_html:
+        if escape_html:
             data = self._replace(data, self.REPLACE_ESCAPE)
-        if self.replace_cosmetic and replace_cosmetic:
+        if replace_cosmetic:
             data = self._replace(data, self.REPLACE_COSMETIC)
         # Now put the replaced links back in the text.
         for token, replacement in url_matches.items():
@@ -476,7 +476,11 @@ class Parser (object):
             data = data.replace('\n', '\r')
         return data
 
-    def _format_tokens(self, tokens, parent, **context):
+    def _format_tokens(self, tokens, parent, escape_html=None, replace_links=None, replace_cosmetic=None, transform_newlines=True, **context):
+        # Allow the parser defaults to be overridden when formatting.
+        escape_html = self.escape_html if escape_html is None else escape_html
+        replace_links = self.replace_links if replace_links is None else replace_links
+        replace_cosmetic = self.replace_cosmetic if replace_cosmetic is None else replace_cosmetic
         idx = 0
         formatted = []
         lt = len(tokens)
@@ -515,11 +519,11 @@ class Parser (object):
                 # If this is a top-level newline, replace it. Otherwise, it will be replaced (if necessary) by the code above.
                 formatted.append('\r' if parent is None or parent.transform_newlines else token_text)
             elif token_type == self.TOKEN_DATA:
-                escape = self.escape_html if parent is None else parent.escape_html
-                links = self.replace_links if parent is None else parent.replace_links
-                cosmetic = self.replace_cosmetic if parent is None else parent.replace_cosmetic
-                transform_newlines = True if parent is None else parent.transform_newlines
-                formatted.append(self._transform(token_text, escape, links, cosmetic, transform_newlines, **context))
+                escape = escape_html if parent is None else parent.escape_html
+                links = replace_links if parent is None else parent.replace_links
+                cosmetic = replace_cosmetic if parent is None else parent.replace_cosmetic
+                newlines = transform_newlines if parent is None else parent.transform_newlines
+                formatted.append(self._transform(token_text, escape, links, cosmetic, newlines, **context))
             idx += 1
         return ''.join(formatted)
 
