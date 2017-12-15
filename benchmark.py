@@ -7,7 +7,10 @@ import random
 import time
 import cProfile
 import pstats
-import StringIO
+try:
+    import StringIO
+except ImportError:
+    import io as StringIO
 
 def word(length, allowed_chars='abcdefghijklmnopqrstuvwxyz'):
     return ''.join(random.choice(allowed_chars) for i in range(length))
@@ -29,8 +32,8 @@ if __name__ == '__main__':
         fmt = bbcode.render_html(doc)
         pr.disable()
         elapsed = time.time() - start
-        print '%d lines: %.6fs (%.2f kB)' % (num, elapsed, len(doc) / 1024.0)
+        print('%d lines: %.6fs (%.2f kB)'% (num, elapsed, len(doc) / 1024.0))
         s = StringIO.StringIO()
         ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')
         ps.print_stats()
-        print s.getvalue()
+        print(s.getvalue())
