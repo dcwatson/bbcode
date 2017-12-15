@@ -48,6 +48,9 @@ linker_takes_context (default: ``False``)
 drop_unrecognized (default: ``False``)
     Whether to drop unrecognized (but valid) tags. The default is to leave the tags, unformatted, in the output.
 
+no_follow (default: ``True``)
+    Whether links will automatically have 'rel="nofollow"' added to them. `Nofollow is explained here. <https://support.google.com/webmasters/answer/96569?hl=en>`_
+
 
 Customizing the Linker
 ----------------------
