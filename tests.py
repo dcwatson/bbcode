@@ -66,6 +66,7 @@ class ParserTests (unittest.TestCase):
         ('[b]Hello, [wor"ld][/b] out', '<strong>Hello, [wor&quot;ld]</strong> out'),
         ('[center]a\nb[code]c\nd[/code]\ne\nf\n', '<div style="text-align:center;">a<br />b<code>c\nd</code>e<br />f<br /></div>'),
         ('<a id="test">[b]test[/b]</a>', '&lt;a id=&quot;test&quot;&gt;<strong>test</strong>&lt;/a&gt;'),
+        ('[code]--[/code]', '<code>--</code>'),
     )
 
     URL_TESTS = """

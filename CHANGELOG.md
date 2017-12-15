@@ -1,3 +1,7 @@
+### 1.0.27
+
+* Set built-in `code` tag to `replace_cosmetic=False`
+
 ### 1.0.26
 
 * Allow overriding parser's `replace_html`, `replace_links`, and `replace_cosmetic` on `format` calls.

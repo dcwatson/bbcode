@@ -1,5 +1,6 @@
 *.py[cod]
 docs/_build/
+.DS_Store
 
 # C extensions
 *.so
