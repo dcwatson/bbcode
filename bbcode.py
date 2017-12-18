@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 26)
+__version_info__ = (1, 0, 27)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -150,7 +150,7 @@ class Parser (object):
         self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>', strip=True,
             swallow_trailing_newline=True)
         self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False, transform_newlines=False,
-            swallow_trailing_newline=True)
+            swallow_trailing_newline=True, replace_cosmetic=False)
         self.add_simple_formatter('center', '<div style="text-align:center;">%(value)s</div>')
         def _render_color(name, value, options, parent, context):
             if 'color' in options:
