@@ -48,8 +48,12 @@ linker_takes_context (default: ``False``)
 drop_unrecognized (default: ``False``)
     Whether to drop unrecognized (but valid) tags. The default is to leave the tags, unformatted, in the output.
 
-no_follow (default: ``True``)
-    Whether links will automatically have 'rel="nofollow"' added to them. `Nofollow is explained here. <https://support.google.com/webmasters/answer/96569?hl=en>`_
+url_template (default: ``rel="nofollow"``)
+    The url template variable allows you to include extra attributes on urls like:: 
+
+    '<a %s href="google.com">'%(url_template).
+    
+By default, it adds the rel="nofollow" attribute which `is explained here <https://support.google.com/webmasters/answer/96569?hl=en>`_, but you could also add other attributes like _target.
 
 
 Customizing the Linker

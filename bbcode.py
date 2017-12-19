@@ -64,7 +64,8 @@ class Parser (object):
 
     def __init__(self, newline='<br />', install_defaults=True, escape_html=True,
                  replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None,
-                 linker_takes_context=False, drop_unrecognized=False, no_follow=True):
+                 linker_takes_context=False, drop_unrecognized=False,
+                 url_template='rel="nofollow"'):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
         self.newline = newline
@@ -75,10 +76,7 @@ class Parser (object):
         self.replace_links = replace_links
         self.linker = linker
         self.linker_takes_context = linker_takes_context
-        if no_follow:
-            self.no_follow_text = 'rel="nofollow" '
-        else:
-            self.no_follow_text = ''
+        self.url_template = url_template
         if install_defaults:
             self.install_default_formatters()
 
@@ -178,7 +176,7 @@ class Parser (object):
             # Only add the missing http:// if it looks like it starts with a domain name.
             if '://' not in href and _domain_re.match(href):
                 href = 'http://' + href
-            return '<a %shref="%s">%s</a>' % (self.no_follow_text, href.replace('"', '%22'), value)
+            return '<a %s href="%s">%s</a>' % (self.url_template, href.replace('"', '%22'), value)
         self.add_formatter('url', _render_url, replace_links=False, replace_cosmetic=False)
 
     def _replace(self, data, replacements):
@@ -445,7 +443,7 @@ class Parser (object):
             if '://' not in href:
                 href = 'http://' + href
             # Escape quotes to avoid XSS, let the browser escape the rest.
-            return '<a %shref="%s">%s</a>' % (self.no_follow_text, href.replace('"', '%22'), url)
+            return '<a %s href="%s">%s</a>' % (self.url_template, href.replace('"', '%22'), url)
 
     def _transform(self, data, escape_html, replace_links, replace_cosmetic, transform_newlines, **context):
         """
