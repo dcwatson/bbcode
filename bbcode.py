@@ -397,6 +397,10 @@ class Parser (object):
         lt = len(tokens)
         while pos < lt:
             token_type, tag_name, tag_opts, token_text = tokens[pos]
+            if token_type == self.TOKEN_DATA:
+                # Short-circuit for performance.
+                pos += 1
+                continue
             if tag.newline_closes and token_type in (self.TOKEN_TAG_START, self.TOKEN_TAG_END):
                 # If we're finding the closing token for a tag that is closed by newlines, but
                 # there is an embedded tag that doesn't transform newlines (i.e. a code tag
