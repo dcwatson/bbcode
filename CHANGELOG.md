@@ -1,3 +1,7 @@
+### 1.0.28
+
+* Added a `default_context` argument to the `Parser` class.
+
 ### 1.0.27
 
 * Set built-in `code` tag to `replace_cosmetic=False`

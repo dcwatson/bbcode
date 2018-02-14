@@ -151,6 +151,10 @@ class ParserTests (unittest.TestCase):
         p = bbcode.Parser(linker=_contextual_link, linker_takes_context=True)
         s = p.format('hello www.apple.com world', substitution="oh hai")
         self.assertEqual(s, 'hello <a href="www.apple.com" target="_blank">oh hai</a> world')
+        # Test default context in linker
+        p = bbcode.Parser(linker=_contextual_link, linker_takes_context=True, default_context={'substitution': 'arf'})
+        s = p.format('hello www.apple.com world')
+        self.assertEqual(s, 'hello <a href="www.apple.com" target="_blank">arf</a> world')
 
     def test_urls(self):
         for line in self.URL_TESTS.splitlines():
@@ -171,6 +175,13 @@ class ParserTests (unittest.TestCase):
         self.assertEqual(formatted, '<a id="test"><strong>test</strong></a>')
         formatted = self.parser.format('<a href="http://www.apple.com">Apple(c)</a>', escape_html=False, replace_links=False)
         self.assertEqual(formatted, '<a href="http://www.apple.com">Apple&copy;</a>')
+
+    def test_default_context(self):
+        parser = bbcode.Parser(default_context={'hello': 'world'})
+        def _render_context(tag_name, value, options, parent, context):
+            return context['hello']
+        parser.add_formatter('c', _render_context)
+        self.assertEqual(parser.format('[c]test[/c]'), 'world')
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 27)
+__version_info__ = (1, 0, 28)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -64,7 +64,7 @@ class Parser (object):
 
     def __init__(self, newline='<br />', install_defaults=True, escape_html=True,
                  replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None,
-                 linker_takes_context=False, drop_unrecognized=False):
+                 linker_takes_context=False, drop_unrecognized=False, default_context=None):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
         self.newline = newline
@@ -75,6 +75,7 @@ class Parser (object):
         self.replace_links = replace_links
         self.linker = linker
         self.linker_takes_context = linker_takes_context
+        self.default_context = default_context or {}
         if install_defaults:
             self.install_default_formatters()
 
@@ -537,7 +538,9 @@ class Parser (object):
         given here will be passed along to the render functions as a context dictionary.
         """
         tokens = self.tokenize(data)
-        return self._format_tokens(tokens, None, **context).replace('\r', self.newline)
+        full_context = self.default_context.copy()
+        full_context.update(context)
+        return self._format_tokens(tokens, None, **full_context).replace('\r', self.newline)
 
     def strip(self, data, strip_newlines=False):
         """
