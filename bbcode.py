@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-__version_info__ = (1, 0, 27)
+__version_info__ = (1, 0, 28)
 __version__ = '.'.join(str(i) for i in __version_info__)
 
 import re
@@ -64,7 +64,7 @@ class Parser (object):
 
     def __init__(self, newline='<br />', install_defaults=True, escape_html=True,
                  replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None,
-                 linker_takes_context=False, drop_unrecognized=False,
+                 linker_takes_context=False, drop_unrecognized=False, default_context=None,
                  url_template='<a rel="nofollow" href="{href}">{text}</a>'):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
@@ -77,6 +77,7 @@ class Parser (object):
         self.linker = linker
         self.linker_takes_context = linker_takes_context
         self.url_template = url_template
+        self.default_context = default_context or {}
         if install_defaults:
             self.install_default_formatters()
 
@@ -399,6 +400,10 @@ class Parser (object):
         lt = len(tokens)
         while pos < lt:
             token_type, tag_name, tag_opts, token_text = tokens[pos]
+            if token_type == self.TOKEN_DATA:
+                # Short-circuit for performance.
+                pos += 1
+                continue
             if tag.newline_closes and token_type in (self.TOKEN_TAG_START, self.TOKEN_TAG_END):
                 # If we're finding the closing token for a tag that is closed by newlines, but
                 # there is an embedded tag that doesn't transform newlines (i.e. a code tag
@@ -535,7 +540,9 @@ class Parser (object):
         given here will be passed along to the render functions as a context dictionary.
         """
         tokens = self.tokenize(data)
-        return self._format_tokens(tokens, None, **context).replace('\r', self.newline)
+        full_context = self.default_context.copy()
+        full_context.update(context)
+        return self._format_tokens(tokens, None, **full_context).replace('\r', self.newline)
 
     def strip(self, data, strip_newlines=False):
         """
