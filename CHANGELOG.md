@@ -1,6 +1,7 @@
 ### 1.0.28
 
 * Added a `default_context` argument to the `Parser` class.
+* Added a `url_template` argument to the `Parser` class, allowing customization of the default linker (see #19 and #28).
 
 ### 1.0.27
 
