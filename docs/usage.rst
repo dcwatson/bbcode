@@ -48,6 +48,17 @@ linker_takes_context (default: ``False``)
 drop_unrecognized (default: ``False``)
     Whether to drop unrecognized (but valid) tags. The default is to leave the tags, unformatted, in the output.
 
+url_template (default: ``<a rel="nofollow" href="{href}">{text}</a>``)
+    The url template allows you to customize what urls are parsed into. 
+    
+    If you'd like to add "target='_blank'", you could do: :: 
+
+    '<a href="{href}" target="_blank">{text}</a>'
+
+    Or you could add a custom css class with: ::
+
+    '<a href="{href}" class="button">{text}</a>'
+    
 
 Customizing the Linker
 ----------------------
