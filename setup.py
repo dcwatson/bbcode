@@ -1,10 +1,15 @@
 from distutils.core import setup
 import bbcode
 
+with open('README.md', 'r') as readme:
+    long_description = readme.read()
+
 setup(
     name='bbcode',
     version=bbcode.__version__,
     description='A pure python bbcode parser and formatter.',
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Dan Watson',
     author_email='dcwatson@gmail.com',
     url='https://github.com/dcwatson/bbcode',
