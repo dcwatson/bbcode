@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import unittest
-import bbcode
 import sys
+import unittest
+
+import bbcode
+
 
 class ParserTests (unittest.TestCase):
 
@@ -43,8 +45,7 @@ class ParserTests (unittest.TestCase):
         # Tests to make sure links don't get cosmetic replacements.
         ('[url=http://test.com/my--page]test[/url]', '<a rel="nofollow" href="http://test.com/my--page">test</a>'),
         ('http://test.com/my...page(c)', '<a rel="nofollow" href="http://test.com/my...page(c)">http://test.com/my...page(c)</a>'),
-        ('multiple http://apple.com/page link http://foo.com/foo--bar test',
-            'multiple <a rel="nofollow" href="http://apple.com/page">http://apple.com/page</a> link <a rel="nofollow" href="http://foo.com/foo--bar">http://foo.com/foo--bar</a> test'),
+        ('multiple http://apple.com/page link http://foo.com/foo--bar test', 'multiple <a rel="nofollow" href="http://apple.com/page">http://apple.com/page</a> link <a rel="nofollow" href="http://foo.com/foo--bar">http://foo.com/foo--bar</a> test'),
         ('[url=http://foo.com]<script>alert("XSS");</script>[/url]', '<a rel="nofollow" href="http://foo.com">&lt;script&gt;alert(&quot;XSS&quot;);&lt;/script&gt;</a>'),
         ('[url]123" onmouseover="alert(\'Hacked\');[/url]', '<a rel="nofollow" href="123&quot; onmouseover=&quot;alert(&#39;Hacked&#39;);">123&quot; onmouseover=&quot;alert(&#39;Hacked&#39;);</a>'),
         ('[code python]lambda code: [code] + [1, 2][/code]', '<code>lambda code: [code] + [1, 2]</code>'),
@@ -142,6 +143,7 @@ class ParserTests (unittest.TestCase):
     def test_linker(self):
         def _contextual_link(url, context):
             return '<a href="%s" target="_blank">%s</a>' % (url, context["substitution"])
+
         def _link(url):
             return _contextual_link(url, {"substitution": url})
         # Test noncontextual linker
@@ -179,6 +181,7 @@ class ParserTests (unittest.TestCase):
 
     def test_default_context(self):
         parser = bbcode.Parser(default_context={'hello': 'world'})
+
         def _render_context(tag_name, value, options, parent, context):
             return context['hello']
         parser.add_formatter('c', _render_context)

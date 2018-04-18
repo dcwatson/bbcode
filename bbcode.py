@@ -14,29 +14,54 @@ if PY3:
 # Adapted from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
 # Changed to only support one level of parentheses, since it was failing catastrophically on some URLs.
 # See http://www.regular-expressions.info/catastrophic.html
-_url_re = re.compile(r'(?im)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\([^\s()<>]+\))+(?:\([^\s()<>]+\)|[^\s`!()\[\]{};:\'".,<>?]))')
+_url_re = re.compile(r'(?im)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)'
+                     r'(?:[^\s()<>]+|\([^\s()<>]+\))+(?:\([^\s()<>]+\)|[^\s`!()\[\]{};:\'".,<>?]))')
 
 # For the URL tag, try to be smart about when to append a missing http://. If the given link looks like a domain,
 # add a http:// in front of it, otherwise leave it alone (since it may be a relative path, a filename, etc).
-_domain_re = re.compile(r'(?im)(?:www\d{0,3}[.]|[a-z0-9.\-]+[.](?:com|net|org|edu|biz|gov|mil|info|io|name|me|tv|us|uk|mobi))')
+_domain_re = re.compile(r'(?im)(?:www\d{0,3}[.]|[a-z0-9.\-]+[.]'
+                        r'(?:com|net|org|edu|biz|gov|mil|info|io|name|me|tv|us|uk|mobi))')
+
 
 class TagOptions (object):
-    tag_name = None #: The name of the tag, all lowercase.
-    newline_closes = False #: True if a newline should automatically close this tag.
-    same_tag_closes = False #: True if another start of the same tag should automatically close this tag.
-    standalone = False #: True if this tag does not have a closing tag.
-    render_embedded = True #: True if tags should be rendered inside this tag.
-    transform_newlines = True #: True if newlines should be converted to markup.
-    escape_html = True #: True if HTML characters (<, >, and &) should be escaped inside this tag.
-    replace_links = True #: True if URLs should be replaced with link markup inside this tag.
-    replace_cosmetic = True #: True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
-    strip = False #: True if leading and trailing whitespace should be stripped inside this tag.
-    swallow_trailing_newline = False #: True if this tag should swallow the first trailing newline (i.e. for block elements).
+    # The name of the tag, all lowercase.
+    tag_name = None
+
+    # True if a newline should automatically close this tag.
+    newline_closes = False
+
+    # True if another start of the same tag should automatically close this tag.
+    same_tag_closes = False
+
+    # True if this tag does not have a closing tag.
+    standalone = False
+
+    # True if tags should be rendered inside this tag.
+    render_embedded = True
+
+    # True if newlines should be converted to markup.
+    transform_newlines = True
+
+    # True if HTML characters (<, >, and &) should be escaped inside this tag.
+    escape_html = True
+
+    # True if URLs should be replaced with link markup inside this tag.
+    replace_links = True
+
+    # True if cosmetic replacements (elipses, dashes, etc.) should be performed inside this tag.
+    replace_cosmetic = True
+
+    # True if leading and trailing whitespace should be stripped inside this tag.
+    strip = False
+
+    # True if this tag should swallow the first trailing newline (i.e. for block elements).
+    swallow_trailing_newline = False
 
     def __init__(self, tag_name, **kwargs):
         self.tag_name = tag_name
         for attr, value in list(kwargs.items()):
             setattr(self, attr, bool(value))
+
 
 class Parser (object):
 
@@ -132,6 +157,7 @@ class Parser (object):
         self.add_simple_formatter('hr', '<hr />', standalone=True)
         self.add_simple_formatter('sub', '<sub>%(value)s</sub>')
         self.add_simple_formatter('sup', '<sup>%(value)s</sup>')
+
         def _render_list(name, value, options, parent, context):
             list_type = options['list'] if (options and 'list' in options) else '*'
             css_opts = {
@@ -151,6 +177,7 @@ class Parser (object):
         self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False, transform_newlines=False,
             swallow_trailing_newline=True, replace_cosmetic=False)
         self.add_simple_formatter('center', '<div style="text-align:center;">%(value)s</div>')
+
         def _render_color(name, value, options, parent, context):
             if 'color' in options:
                 color = options['color'].strip()
@@ -165,6 +192,7 @@ class Parser (object):
                 'value': value,
             }
         self.add_formatter('color', _render_color)
+
         def _render_url(name, value, options, parent, context):
             if options and 'url' in options:
                 # Option values are not escaped for HTML output.
@@ -221,7 +249,7 @@ class Parser (object):
             # OrderedDict is only available for 2.7+, so leave regular unsorted dicts as a fallback.
             from collections import OrderedDict
             opts = OrderedDict()
-        except:
+        except ImportError:
             opts = {}
         in_value = False
         in_quote = False
@@ -236,8 +264,8 @@ class Parser (object):
             ch = stripped[pos]
             if in_value:
                 if in_quote:
-                    if ch == '\\' and ls > pos+1 and stripped[pos+1] in ('\\', '"', "'"):
-                        value += stripped[pos+1]
+                    if ch == '\\' and ls > pos + 1 and stripped[pos + 1] in ('\\', '"', "'"):
+                        value += stripped[pos + 1]
                         pos += 1
                     elif ch == in_quote:
                         in_quote = False
@@ -290,7 +318,7 @@ class Parser (object):
         parse any options and return a tuple of the form:
             (valid, tag_name, closer, options)
         """
-        if (not tag.startswith(self.tag_opener)) or (not tag.endswith(self.tag_closer)) or ('\n' in tag) or ('\r' in tag):
+        if not tag.startswith(self.tag_opener) or not tag.endswith(self.tag_closer) or ('\n' in tag) or ('\r' in tag):
             return (False, tag, False, None)
         tag_name = tag[len(self.tag_opener):-len(self.tag_closer)].strip()
         if not tag_name:
@@ -483,7 +511,8 @@ class Parser (object):
             data = data.replace('\n', '\r')
         return data
 
-    def _format_tokens(self, tokens, parent, escape_html=None, replace_links=None, replace_cosmetic=None, transform_newlines=True, **context):
+    def _format_tokens(self, tokens, parent, escape_html=None, replace_links=None, replace_cosmetic=None,
+            transform_newlines=True, **context):
         # Allow the parser defaults to be overridden when formatting.
         escape_html = self.escape_html if escape_html is None else escape_html
         replace_links = self.replace_links if replace_links is None else replace_links
@@ -523,7 +552,8 @@ class Parser (object):
                     # Skip to the end tag.
                     idx = end
             elif token_type == self.TOKEN_NEWLINE:
-                # If this is a top-level newline, replace it. Otherwise, it will be replaced (if necessary) by the code above.
+                # If this is a top-level newline, replace it. Otherwise, it will be replaced (if necessary)
+                # by the code above.
                 formatted.append('\r' if parent is None or parent.transform_newlines else token_text)
             elif token_type == self.TOKEN_DATA:
                 escape = escape_html if parent is None else parent.escape_html
@@ -556,7 +586,9 @@ class Parser (object):
                 text.append(token_text)
         return ''.join(text)
 
+
 g_parser = None
+
 
 def render_html(input_text, **context):
     """
@@ -567,6 +599,7 @@ def render_html(input_text, **context):
     if g_parser is None:
         g_parser = Parser()
     return g_parser.format(input_text, **context)
+
 
 if __name__ == '__main__':
     import sys
