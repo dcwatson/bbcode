@@ -21,6 +21,8 @@ class ParserTests (unittest.TestCase):
         ('[/asdf][/b]', '[/asdf]'),
         ('[list]\n[*]one\n[*]two\n[/list]', '<ul><li>one</li><li>two</li></ul>'),
         ('[list=1]\n[*]one\n[*]two\n[/list]', '<ol style="list-style-type:decimal;"><li>one</li><li>two</li></ol>'),
+        ('[*]hello\n[*]world\n', '[*]hello<br />[*]world<br />'),
+        ('[b][*]hello\n[*]world\n[/b]', '<strong>[*]hello<br />[*]world<br /></strong>'),
         ('[b\n oops [i]i[/i] forgot[/b]', '[b<br /> oops <em>i</em> forgot'),
         ('[b]over[i]lap[/b]ped[/i]', '<strong>over<em>lap</em></strong>ped'),
         ('>> hey -- a dash...', '&gt;&gt; hey &ndash; a dash&#8230;'),
