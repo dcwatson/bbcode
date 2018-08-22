@@ -169,9 +169,16 @@ class Parser (object):
             css = ' style="list-style-type:%s;"' % css_opts[list_type] if list_type in css_opts else ''
             return '<%s%s>%s</%s>' % (tag, css, value, tag)
         self.add_formatter('list', _render_list, transform_newlines=False, strip=True, swallow_trailing_newline=True)
+
         # Make sure transform_newlines = False for [*], so [code] tags can be embedded without transformation.
-        self.add_simple_formatter('*', '<li>%(value)s</li>', newline_closes=True, transform_newlines=False,
+        def _render_list_item(name, value, options, parent, context):
+            if not parent or parent.tag_name != 'list':
+                return '[*]%s<br />' % value
+
+            return '<li>%s</li>' % value
+        self.add_formatter('*', _render_list_item, newline_closes=True, transform_newlines=False,
             same_tag_closes=True, strip=True)
+
         self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>', strip=True,
             swallow_trailing_newline=True)
         self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False, transform_newlines=False,
