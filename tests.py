@@ -44,6 +44,7 @@ class ParserTests (unittest.TestCase):
         ('[url=relative/url.html]link[/url]', '<a rel="nofollow" href="relative/url.html">link</a>'),
         ('[url=/absolute/url.html]link[/url]', '<a rel="nofollow" href="/absolute/url.html">link</a>'),
         ('[url=test.html]page[/url]', '<a rel="nofollow" href="test.html">page</a>'),
+        (u'[URL=ñó]page[/URL]', u'<a rel="nofollow" href="ñó">page</a>'),
         # Tests to make sure links don't get cosmetic replacements.
         ('[url=http://test.com/my--page]test[/url]', '<a rel="nofollow" href="http://test.com/my--page">test</a>'),
         ('http://test.com/my...page(c)', '<a rel="nofollow" href="http://test.com/my...page(c)">http://test.com/my...page(c)</a>'),

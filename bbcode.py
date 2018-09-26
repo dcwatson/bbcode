@@ -90,7 +90,7 @@ class Parser (object):
     def __init__(self, newline='<br />', install_defaults=True, escape_html=True,
                  replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None,
                  linker_takes_context=False, drop_unrecognized=False, default_context=None,
-                 url_template='<a rel="nofollow" href="{href}">{text}</a>'):
+                 url_template=u'<a rel="nofollow" href="{href}">{text}</a>'):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
         self.newline = newline
