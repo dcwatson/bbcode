@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from __future__ import unicode_literals
+
 import sys
 import unittest
 
@@ -44,7 +46,7 @@ class ParserTests (unittest.TestCase):
         ('[url=relative/url.html]link[/url]', '<a rel="nofollow" href="relative/url.html">link</a>'),
         ('[url=/absolute/url.html]link[/url]', '<a rel="nofollow" href="/absolute/url.html">link</a>'),
         ('[url=test.html]page[/url]', '<a rel="nofollow" href="test.html">page</a>'),
-        (u'[URL=ñó]page[/URL]', u'<a rel="nofollow" href="ñó">page</a>'),
+        ('[URL=ñó]page[/URL]', '<a rel="nofollow" href="ñó">page</a>'),
         # Tests to make sure links don't get cosmetic replacements.
         ('[url=http://test.com/my--page]test[/url]', '<a rel="nofollow" href="http://test.com/my--page">test</a>'),
         ('http://test.com/my...page(c)', '<a rel="nofollow" href="http://test.com/my...page(c)">http://test.com/my...page(c)</a>'),
@@ -168,12 +170,8 @@ class ParserTests (unittest.TestCase):
             self.assertEqual(num, 1, 'Found %d links in "%s"' % (num, line.strip()))
 
     def test_unicode(self):
-        if sys.version_info >= (3,):
-            src = '[center]ƒünk¥ • §tüƒƒ[/center]'
-            dst = '<div style="text-align:center;">ƒünk¥ • §tüƒƒ</div>'
-        else:
-            src = unicode('[center]ƒünk¥ • §tüƒƒ[/center]', 'utf-8')
-            dst = unicode('<div style="text-align:center;">ƒünk¥ • §tüƒƒ</div>', 'utf-8')
+        src = '[center]ƒünk¥ • §tüƒƒ[/center]'
+        dst = '<div style="text-align:center;">ƒünk¥ • §tüƒƒ</div>'
         self.assertEqual(self.parser.format(src), dst)
 
     def test_format_overrides(self):
