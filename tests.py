@@ -21,6 +21,8 @@ class ParserTests (unittest.TestCase):
         ('[/asdf][/b]', '[/asdf]'),
         ('[list]\n[*]one\n[*]two\n[/list]', '<ul><li>one</li><li>two</li></ul>'),
         ('[list=1]\n[*]one\n[*]two\n[/list]', '<ol style="list-style-type:decimal;"><li>one</li><li>two</li></ol>'),
+        ('[*]hello\n[*]world\n', '[*]hello<br />[*]world<br />'),
+        ('[b][*]hello\n[*]world\n[/b]', '<strong>[*]hello<br />[*]world<br /></strong>'),
         ('[b\n oops [i]i[/i] forgot[/b]', '[b<br /> oops <em>i</em> forgot'),
         ('[b]over[i]lap[/b]ped[/i]', '<strong>over<em>lap</em></strong>ped'),
         ('>> hey -- a dash...', '&gt;&gt; hey &ndash; a dash&#8230;'),
@@ -42,6 +44,7 @@ class ParserTests (unittest.TestCase):
         ('[url=relative/url.html]link[/url]', '<a rel="nofollow" href="relative/url.html">link</a>'),
         ('[url=/absolute/url.html]link[/url]', '<a rel="nofollow" href="/absolute/url.html">link</a>'),
         ('[url=test.html]page[/url]', '<a rel="nofollow" href="test.html">page</a>'),
+        (u'[URL=ñó]page[/URL]', u'<a rel="nofollow" href="ñó">page</a>'),
         # Tests to make sure links don't get cosmetic replacements.
         ('[url=http://test.com/my--page]test[/url]', '<a rel="nofollow" href="http://test.com/my--page">test</a>'),
         ('http://test.com/my...page(c)', '<a rel="nofollow" href="http://test.com/my...page(c)">http://test.com/my...page(c)</a>'),
