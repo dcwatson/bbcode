@@ -1,3 +1,9 @@
+### 1.0.32
+
+* List items `[*]` only render inside of `[list]` tags, to avoid producing invalid HTML
+* Switched to use `from __future__ import unicode_literals` so things like `url_template` can handle unicode replacements
+* Test on Python 3.7
+
 ### 1.0.28
 
 * Added a `default_context` argument to the `Parser` class.

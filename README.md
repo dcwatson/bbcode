@@ -24,7 +24,7 @@ The easiest way to install the bbcode module is with pip, e.g.:
 Requirements
 ============
 
-Python, tested with versions 2.6 through 3.6.
+Python, tested with versions 2.6 through 3.7. Also tested on PyPy (2 and 3).
 
 
 Basic Usage
