@@ -522,7 +522,7 @@ class Parser (object):
         return data
 
     def _format_tokens(self, tokens, parent, escape_html=None, replace_links=None, replace_cosmetic=None,
-            transform_newlines=True, depth=0, **context):
+            transform_newlines=True, depth=1, **context):
         # Allow the parser defaults to be overridden when formatting.
         escape_html = self.escape_html if escape_html is None else escape_html
         replace_links = self.replace_links if replace_links is None else replace_links
@@ -543,7 +543,7 @@ class Parser (object):
                     # If the end tag should not be consumed, back up one (after grabbing the subtokens).
                     if not consume:
                         end = end - 1
-                    if tag.render_embedded and (not depth or depth >= self.max_tag_depth):
+                    if tag.render_embedded and not (self.max_tag_depth and depth >= self.max_tag_depth):
                         # This tag renders embedded tags, simply recurse.
                         inner = self._format_tokens(subtokens, tag, depth=depth+1, **context)
                     else:
