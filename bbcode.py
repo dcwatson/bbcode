@@ -2,11 +2,12 @@
 
 from __future__ import unicode_literals
 
-__version_info__ = (1, 0, 32)
-__version__ = '.'.join(str(i) for i in __version_info__)
-
 import re
 import sys
+
+__version_info__ = (1, 0, 33)
+__version__ = '.'.join(str(i) for i in __version_info__)
+
 
 PY3 = sys.version_info[0] == 3
 
@@ -92,7 +93,7 @@ class Parser (object):
     def __init__(self, newline='<br />', install_defaults=True, escape_html=True,
                  replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None,
                  linker_takes_context=False, drop_unrecognized=False, default_context=None,
-                 max_tag_depth=0, url_template='<a rel="nofollow" href="{href}">{text}</a>'):
+                 max_tag_depth=None, url_template='<a rel="nofollow" href="{href}">{text}</a>'):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
         self.newline = newline
@@ -103,7 +104,7 @@ class Parser (object):
         self.replace_links = replace_links
         self.linker = linker
         self.linker_takes_context = linker_takes_context
-        self.max_tag_depth = max_tag_depth
+        self.max_tag_depth = max_tag_depth or sys.getrecursionlimit()
         self.url_template = url_template
         self.default_context = default_context or {}
         if install_defaults:
@@ -543,9 +544,9 @@ class Parser (object):
                     # If the end tag should not be consumed, back up one (after grabbing the subtokens).
                     if not consume:
                         end = end - 1
-                    if tag.render_embedded and not (self.max_tag_depth and depth >= self.max_tag_depth):
+                    if tag.render_embedded and depth < self.max_tag_depth:
                         # This tag renders embedded tags, simply recurse.
-                        inner = self._format_tokens(subtokens, tag, depth=depth+1, **context)
+                        inner = self._format_tokens(subtokens, tag, depth=depth + 1, **context)
                     else:
                         # Otherwise, just concatenate all the token text.
                         inner = self._transform(''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links,

@@ -1,8 +1,12 @@
+### 1.0.33
+
+* Added a `max_tag_depth` argument to the `Parser` class, defaulting to Python's recursion limit (Thanks, Lanny).
+
 ### 1.0.32
 
-* List items `[*]` only render inside of `[list]` tags, to avoid producing invalid HTML
-* Switched to use `from __future__ import unicode_literals` so things like `url_template` can handle unicode replacements
-* Test on Python 3.7
+* List items `[*]` only render inside of `[list]` tags, to avoid producing invalid HTML.
+* Switched to use `from __future__ import unicode_literals` so things like `url_template` can handle unicode replacements.
+* Test on Python 3.7.
 
 ### 1.0.28
 
@@ -11,7 +15,7 @@
 
 ### 1.0.27
 
-* Set built-in `code` tag to `replace_cosmetic=False`
+* Set built-in `code` tag to `replace_cosmetic=False`.
 
 ### 1.0.26
 
@@ -19,7 +23,7 @@
 
 ### 1.0.25
 
-* Allow escaping quotes in tag options using backslash, i.e. `[quote='Sinéad O\'Connor']`
+* Allow escaping quotes in tag options using backslash, i.e. `[quote='Sinéad O\'Connor']`.
 
 ### 1.0.11
 

@@ -115,7 +115,7 @@ class ParserTests (unittest.TestCase):
         limit_one_expected = '<blockquote>[quote][quote]foo[/quote][/quote]</blockquote>'
         limit_two_expected = '<blockquote><blockquote>[quote]foo[/quote]</blockquote></blockquote>'
         unlimited_expected = '<blockquote><blockquote><blockquote>foo</blockquote></blockquote></blockquote>'
-        
+
         self.assertEqual(limit_one_parser.format(src), limit_one_expected)
         self.assertEqual(limit_two_parser.format(src), limit_two_expected)
         self.assertEqual(unlimited_parser.format(src), unlimited_expected)
