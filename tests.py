@@ -106,6 +106,17 @@ class ParserTests (unittest.TestCase):
             result = self.parser.format(src)
             self.assertEqual(result, expected)
 
+    def test_max_depth(self):
+        limited_parser = bbcode.Parser(max_tag_depth=2)
+        unlimited_parser = bbcode.Parser()
+
+        src = '[quote][quote][quote]foo[/quote][/quote][/quote]'
+        unlimited_expected = '<blockquote><blockquote><blockquote>foo</blockquote></blockquote></blockquote>'
+        limited_expected = '<blockquote><blockquote>[quote]foo[/quote]</blockquote></blockquote>'
+        
+        self.assertEqual(unlimited_parser.format(src), unlimited_expected)
+        self.assertEqual(limited_parser.format(src), limited_expected)
+
     def test_parse_opts(self):
         tag_name, opts = self.parser._parse_opts('url="http://test.com/s.php?a=bcd efg"  popup')
         self.assertEqual(tag_name, 'url')
