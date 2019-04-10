@@ -92,7 +92,7 @@ class Parser (object):
     def __init__(self, newline='<br />', install_defaults=True, escape_html=True,
                  replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None,
                  linker_takes_context=False, drop_unrecognized=False, default_context=None,
-                 url_template='<a rel="nofollow" href="{href}">{text}</a>'):
+                 max_tag_depth=0, url_template='<a rel="nofollow" href="{href}">{text}</a>'):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
         self.newline = newline
@@ -103,6 +103,7 @@ class Parser (object):
         self.replace_links = replace_links
         self.linker = linker
         self.linker_takes_context = linker_takes_context
+        self.max_tag_depth = max_tag_depth
         self.url_template = url_template
         self.default_context = default_context or {}
         if install_defaults:
@@ -521,7 +522,7 @@ class Parser (object):
         return data
 
     def _format_tokens(self, tokens, parent, escape_html=None, replace_links=None, replace_cosmetic=None,
-            transform_newlines=True, **context):
+            transform_newlines=True, depth=0, **context):
         # Allow the parser defaults to be overridden when formatting.
         escape_html = self.escape_html if escape_html is None else escape_html
         replace_links = self.replace_links if replace_links is None else replace_links
@@ -542,9 +543,9 @@ class Parser (object):
                     # If the end tag should not be consumed, back up one (after grabbing the subtokens).
                     if not consume:
                         end = end - 1
-                    if tag.render_embedded:
+                    if tag.render_embedded and (not depth or depth >= self.max_tag_depth):
                         # This tag renders embedded tags, simply recurse.
-                        inner = self._format_tokens(subtokens, tag, **context)
+                        inner = self._format_tokens(subtokens, tag, depth=depth+1, **context)
                     else:
                         # Otherwise, just concatenate all the token text.
                         inner = self._transform(''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links,
