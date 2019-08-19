@@ -10,7 +10,7 @@ https://github.com/dcwatson/bbcode
 **Documentation**
 http://bbcode.readthedocs.org/
 
-[![Build Status](https://travis-ci.org/dcwatson/bbcode.svg?branch=master)](https://travis-ci.org/dcwatson/bbcode)
+[![CI Status](https://github.com/dcwatson/bbcode/workflows/CI/badge.svg)](https://github.com/dcwatson/bbcode/actions)
 
 
 Installation
@@ -24,7 +24,7 @@ The easiest way to install the bbcode module is with pip, e.g.:
 Requirements
 ============
 
-Python, tested with versions 2.6 through 3.7. Also tested on PyPy (2 and 3).
+Python, tested with versions 2.7, 3.5, 3.6, and 3.7.
 
 
 Basic Usage
