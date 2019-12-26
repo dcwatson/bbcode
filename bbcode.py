@@ -13,6 +13,11 @@ PY3 = sys.version_info[0] == 3
 
 if PY3:
     xrange = range
+    from collections import OrderedDict
+    from collections.abc import Mapping, MutableMapping
+else:
+    from collections import Mapping, MutableMapping, OrderedDict
+
 
 # Adapted from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
 # Changed to only support one level of parentheses, since it was failing catastrophically on some URLs.
@@ -24,6 +29,56 @@ _url_re = re.compile(r'(?im)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2
 # add a http:// in front of it, otherwise leave it alone (since it may be a relative path, a filename, etc).
 _domain_re = re.compile(r'(?im)(?:www\d{0,3}[.]|[a-z0-9.\-]+[.]'
                         r'(?:com|net|org|edu|biz|gov|mil|info|io|name|me|tv|us|uk|mobi))')
+
+
+# Taken from https://github.com/psf/requests/blob/eedd67462819f8dbf8c1c32e77f9070606605231/requests/structures.py#L15
+class CaseInsensitiveDict(MutableMapping):
+
+    def __init__(self, data=None, **kwargs):
+        self._store = OrderedDict()
+        if data is None:
+            data = {}
+        self.update(data, **kwargs)
+
+    def __setitem__(self, key, value):
+        # Use the lowercased key for lookups, but store the actual
+        # key alongside the value.
+        self._store[key.lower()] = (key, value)
+
+    def __getitem__(self, key):
+        return self._store[key.lower()][1]
+
+    def __delitem__(self, key):
+        del self._store[key.lower()]
+
+    def __iter__(self):
+        return (casedkey for casedkey, mappedvalue in self._store.values())
+
+    def __len__(self):
+        return len(self._store)
+
+    def lower_items(self):
+        """Like iteritems(), but with all lowercase keys."""
+        return (
+            (lowerkey, keyval[1])
+            for (lowerkey, keyval)
+            in self._store.items()
+        )
+
+    def __eq__(self, other):
+        if isinstance(other, Mapping):
+            other = CaseInsensitiveDict(other)
+        else:
+            return NotImplemented
+        # Compare insensitively
+        return dict(self.lower_items()) == dict(other.lower_items())
+
+    # Copy is required
+    def copy(self):
+        return CaseInsensitiveDict(self._store.values())
+
+    def __repr__(self):
+        return str(dict(self.items()))
 
 
 class TagOptions (object):
@@ -256,12 +311,7 @@ class Parser (object):
                 tag_name=url, options={'url': 'http://test.com/s.php?a=bcd efg', 'popup': ''}
         """
         name = None
-        try:
-            # OrderedDict is only available for 2.7+, so leave regular unsorted dicts as a fallback.
-            from collections import OrderedDict
-            opts = OrderedDict()
-        except ImportError:
-            opts = {}
+        opts = CaseInsensitiveDict()
         in_value = False
         in_quote = False
         attr = ''
@@ -282,7 +332,7 @@ class Parser (object):
                         in_quote = False
                         in_value = False
                         if attr:
-                            opts[attr.lower()] = value.strip()
+                            opts[attr] = value.strip()
                         attr = ''
                         value = ''
                     else:
@@ -292,7 +342,7 @@ class Parser (object):
                         in_quote = ch
                     elif ch == ' ' and data.find('=', pos + 1) > 0:
                         # If there is no = after this, the value may accept spaces.
-                        opts[attr.lower()] = value.strip()
+                        opts[attr] = value.strip()
                         attr = ''
                         value = ''
                         in_value = False
@@ -311,7 +361,7 @@ class Parser (object):
                             if name is None:
                                 name = attr
                             else:
-                                opts[attr.lower()] = ''
+                                opts[attr] = ''
                         attr = ''
                         attr_done = False
                     attr += ch
@@ -320,7 +370,7 @@ class Parser (object):
         if attr:
             if name is None:
                 name = attr
-            opts[attr.lower()] = value.strip()
+            opts[attr] = value.strip()
         return name.lower(), opts
 
     def _parse_tag(self, tag):

@@ -195,12 +195,20 @@ class ParserTests (unittest.TestCase):
         self.assertEqual(formatted, '<a href="http://www.apple.com">Apple&copy;</a>')
 
     def test_default_context(self):
-        parser = bbcode.Parser(default_context={'hello': 'world'})
-
         def _render_context(tag_name, value, options, parent, context):
             return context['hello']
+        parser = bbcode.Parser(default_context={'hello': 'world'})
         parser.add_formatter('c', _render_context)
         self.assertEqual(parser.format('[c]test[/c]'), 'world')
+
+    def test_options_case(self):
+        def _render_author(tag_name, value, options, parent, context):
+            self.assertIn('dan', options)
+            self.assertEqual(options['wAtSoN'], '1')
+            return ' '.join(key for key, value in options.items())
+        parser = bbcode.Parser()
+        parser.add_formatter('author', _render_author)
+        self.assertEqual(parser.format('[author Dan Watson=1]whatever[/author]'), 'Dan Watson')
 
 
 if __name__ == '__main__':
