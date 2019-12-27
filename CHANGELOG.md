@@ -1,3 +1,9 @@
+## 1.1.0
+
+* Now using a `CaseInsensitiveDict` to store tag options, so they retain the source case, but can be accessed case-insensitively.
+* Dropped support for Python 2.6, tested against Python 3.8.
+* Improved code coverage, formatted with black, and cleaned up Flake8 warnings.
+
 ### 1.0.33
 
 * Added a `max_tag_depth` argument to the `Parser` class, defaulting to Python's recursion limit (Thanks, Lanny).

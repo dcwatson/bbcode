@@ -21,7 +21,12 @@ lib
 lib64
 MANIFEST
 
-# Eclipse/PyDev
+# Eclipse/PyDev/VSCode
 .project
 .pydevproject
 .settings
+.vscode
+
+# Coverage
+.coverage
+htmlcov

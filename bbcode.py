@@ -5,8 +5,8 @@ from __future__ import unicode_literals
 import re
 import sys
 
-__version_info__ = (1, 0, 33)
-__version__ = '.'.join(str(i) for i in __version_info__)
+__version_info__ = (1, 1, 0)
+__version__ = ".".join(str(i) for i in __version_info__)
 
 
 PY3 = sys.version_info[0] == 3
@@ -15,25 +15,27 @@ if PY3:
     xrange = range
     from collections import OrderedDict
     from collections.abc import Mapping, MutableMapping
-else:
+else:  # pragma: no cover
     from collections import Mapping, MutableMapping, OrderedDict
 
 
 # Adapted from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
 # Changed to only support one level of parentheses, since it was failing catastrophically on some URLs.
 # See http://www.regular-expressions.info/catastrophic.html
-_url_re = re.compile(r'(?im)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)'
-                     r'(?:[^\s()<>]+|\([^\s()<>]+\))+(?:\([^\s()<>]+\)|[^\s`!()\[\]{};:\'".,<>?]))')
+_url_re = re.compile(
+    r"(?im)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)"
+    r'(?:[^\s()<>]+|\([^\s()<>]+\))+(?:\([^\s()<>]+\)|[^\s`!()\[\]{};:\'".,<>?]))'
+)
 
 # For the URL tag, try to be smart about when to append a missing http://. If the given link looks like a domain,
 # add a http:// in front of it, otherwise leave it alone (since it may be a relative path, a filename, etc).
-_domain_re = re.compile(r'(?im)(?:www\d{0,3}[.]|[a-z0-9.\-]+[.]'
-                        r'(?:com|net|org|edu|biz|gov|mil|info|io|name|me|tv|us|uk|mobi))')
+_domain_re = re.compile(
+    r"(?im)(?:www\d{0,3}[.]|[a-z0-9.\-]+[.](?:com|net|org|edu|biz|gov|mil|info|io|name|me|tv|us|uk|mobi))"
+)
 
 
 # Taken from https://github.com/psf/requests/blob/eedd67462819f8dbf8c1c32e77f9070606605231/requests/structures.py#L15
 class CaseInsensitiveDict(MutableMapping):
-
     def __init__(self, data=None, **kwargs):
         self._store = OrderedDict()
         if data is None:
@@ -59,11 +61,7 @@ class CaseInsensitiveDict(MutableMapping):
 
     def lower_items(self):
         """Like iteritems(), but with all lowercase keys."""
-        return (
-            (lowerkey, keyval[1])
-            for (lowerkey, keyval)
-            in self._store.items()
-        )
+        return ((lowerkey, keyval[1]) for (lowerkey, keyval) in self._store.items())
 
     def __eq__(self, other):
         if isinstance(other, Mapping):
@@ -81,7 +79,7 @@ class CaseInsensitiveDict(MutableMapping):
         return str(dict(self.items()))
 
 
-class TagOptions (object):
+class TagOptions(object):
     # The name of the tag, all lowercase.
     tag_name = None
 
@@ -121,7 +119,7 @@ class TagOptions (object):
             setattr(self, attr, bool(value))
 
 
-class Parser (object):
+class Parser(object):
 
     TOKEN_TAG_START = 1
     TOKEN_TAG_END = 2
@@ -129,26 +127,38 @@ class Parser (object):
     TOKEN_DATA = 4
 
     REPLACE_ESCAPE = (
-        ('&', '&amp;'),
-        ('<', '&lt;'),
-        ('>', '&gt;'),
-        ('"', '&quot;'),
-        ("'", '&#39;'),
+        ("&", "&amp;"),
+        ("<", "&lt;"),
+        (">", "&gt;"),
+        ('"', "&quot;"),
+        ("'", "&#39;"),
     )
 
     REPLACE_COSMETIC = (
-        ('---', '&mdash;'),
-        ('--', '&ndash;'),
-        ('...', '&#8230;'),
-        ('(c)', '&copy;'),
-        ('(reg)', '&reg;'),
-        ('(tm)', '&trade;'),
+        ("---", "&mdash;"),
+        ("--", "&ndash;"),
+        ("...", "&#8230;"),
+        ("(c)", "&copy;"),
+        ("(reg)", "&reg;"),
+        ("(tm)", "&trade;"),
     )
 
-    def __init__(self, newline='<br />', install_defaults=True, escape_html=True,
-                 replace_links=True, replace_cosmetic=True, tag_opener='[', tag_closer=']', linker=None,
-                 linker_takes_context=False, drop_unrecognized=False, default_context=None,
-                 max_tag_depth=None, url_template='<a rel="nofollow" href="{href}">{text}</a>'):
+    def __init__(
+        self,
+        newline="<br />",
+        install_defaults=True,
+        escape_html=True,
+        replace_links=True,
+        replace_cosmetic=True,
+        tag_opener="[",
+        tag_closer="]",
+        linker=None,
+        linker_takes_context=False,
+        drop_unrecognized=False,
+        default_context=None,
+        max_tag_depth=None,
+        url_template='<a rel="nofollow" href="{href}">{text}</a>',
+    ):
         self.tag_opener = tag_opener
         self.tag_closer = tag_closer
         self.newline = newline
@@ -195,84 +205,101 @@ class Parser (object):
         Installs a formatter that takes the tag options dictionary, puts a value key
         in it, and uses it as a format dictionary to the given format string.
         """
+
         def _render(name, value, options, parent, context):
             fmt = {}
             if options:
                 fmt.update(options)
-            fmt.update({'value': value})
+            fmt.update({"value": value})
             return format_string % fmt
+
         self.add_formatter(tag_name, _render, **kwargs)
 
     def install_default_formatters(self):
         """
         Installs default formatters for the following tags:
 
-            b, i, u, s, list (and \*), quote, code, center, color, url
+            b, i, u, s, list (and *), quote, code, center, color, url
         """
-        self.add_simple_formatter('b', '<strong>%(value)s</strong>')
-        self.add_simple_formatter('i', '<em>%(value)s</em>')
-        self.add_simple_formatter('u', '<u>%(value)s</u>')
-        self.add_simple_formatter('s', '<strike>%(value)s</strike>')
-        self.add_simple_formatter('hr', '<hr />', standalone=True)
-        self.add_simple_formatter('sub', '<sub>%(value)s</sub>')
-        self.add_simple_formatter('sup', '<sup>%(value)s</sup>')
+        self.add_simple_formatter("b", "<strong>%(value)s</strong>")
+        self.add_simple_formatter("i", "<em>%(value)s</em>")
+        self.add_simple_formatter("u", "<u>%(value)s</u>")
+        self.add_simple_formatter("s", "<strike>%(value)s</strike>")
+        self.add_simple_formatter("hr", "<hr />", standalone=True)
+        self.add_simple_formatter("sub", "<sub>%(value)s</sub>")
+        self.add_simple_formatter("sup", "<sup>%(value)s</sup>")
 
         def _render_list(name, value, options, parent, context):
-            list_type = options['list'] if (options and 'list' in options) else '*'
+            list_type = options["list"] if (options and "list" in options) else "*"
             css_opts = {
-                '1': 'decimal', '01': 'decimal-leading-zero',
-                'a': 'lower-alpha', 'A': 'upper-alpha',
-                'i': 'lower-roman', 'I': 'upper-roman',
+                "1": "decimal",
+                "01": "decimal-leading-zero",
+                "a": "lower-alpha",
+                "A": "upper-alpha",
+                "i": "lower-roman",
+                "I": "upper-roman",
             }
-            tag = 'ol' if list_type in css_opts else 'ul'
-            css = ' style="list-style-type:%s;"' % css_opts[list_type] if list_type in css_opts else ''
-            return '<%s%s>%s</%s>' % (tag, css, value, tag)
-        self.add_formatter('list', _render_list, transform_newlines=False, strip=True, swallow_trailing_newline=True)
+            tag = "ol" if list_type in css_opts else "ul"
+            css = ' style="list-style-type:%s;"' % css_opts[list_type] if list_type in css_opts else ""
+            return "<%s%s>%s</%s>" % (tag, css, value, tag)
+
+        self.add_formatter("list", _render_list, transform_newlines=False, strip=True, swallow_trailing_newline=True)
 
         # Make sure transform_newlines = False for [*], so [code] tags can be embedded without transformation.
         def _render_list_item(name, value, options, parent, context):
-            if not parent or parent.tag_name != 'list':
-                return '[*]%s<br />' % value
+            if not parent or parent.tag_name != "list":
+                return "[*]%s<br />" % value
 
-            return '<li>%s</li>' % value
-        self.add_formatter('*', _render_list_item, newline_closes=True, transform_newlines=False,
-            same_tag_closes=True, strip=True)
+            return "<li>%s</li>" % value
 
-        self.add_simple_formatter('quote', '<blockquote>%(value)s</blockquote>', strip=True,
-            swallow_trailing_newline=True)
-        self.add_simple_formatter('code', '<code>%(value)s</code>', render_embedded=False, transform_newlines=False,
-            swallow_trailing_newline=True, replace_cosmetic=False)
-        self.add_simple_formatter('center', '<div style="text-align:center;">%(value)s</div>')
+        self.add_formatter(
+            "*", _render_list_item, newline_closes=True, transform_newlines=False, same_tag_closes=True, strip=True
+        )
+
+        self.add_simple_formatter(
+            "quote", "<blockquote>%(value)s</blockquote>", strip=True, swallow_trailing_newline=True
+        )
+        self.add_simple_formatter(
+            "code",
+            "<code>%(value)s</code>",
+            render_embedded=False,
+            transform_newlines=False,
+            swallow_trailing_newline=True,
+            replace_cosmetic=False,
+        )
+        self.add_simple_formatter("center", '<div style="text-align:center;">%(value)s</div>')
 
         def _render_color(name, value, options, parent, context):
-            if 'color' in options:
-                color = options['color'].strip()
+            if "color" in options:
+                color = options["color"].strip()
             elif options:
                 color = list(options.keys())[0].strip()
             else:
                 return value
-            match = re.match(r'^([a-z]+)|^(#[a-f0-9]{3,6})', color, re.I)
-            color = match.group() if match else 'inherit'
+            match = re.match(r"^([a-z]+)|^(#[a-f0-9]{3,6})", color, re.I)
+            color = match.group() if match else "inherit"
             return '<span style="color:%(color)s;">%(value)s</span>' % {
-                'color': color,
-                'value': value,
+                "color": color,
+                "value": value,
             }
-        self.add_formatter('color', _render_color)
+
+        self.add_formatter("color", _render_color)
 
         def _render_url(name, value, options, parent, context):
-            if options and 'url' in options:
+            if options and "url" in options:
                 # Option values are not escaped for HTML output.
-                href = self._replace(options['url'], self.REPLACE_ESCAPE)
+                href = self._replace(options["url"], self.REPLACE_ESCAPE)
             else:
                 href = value
             # Completely ignore javascript: and data: "links".
-            if re.sub(r'[^a-z0-9+]', '', href.lower().split(':', 1)[0]) in ('javascript', 'data', 'vbscript'):
-                return ''
+            if re.sub(r"[^a-z0-9+]", "", href.lower().split(":", 1)[0]) in ("javascript", "data", "vbscript"):
+                return ""
             # Only add the missing http:// if it looks like it starts with a domain name.
-            if '://' not in href and _domain_re.match(href):
-                href = 'http://' + href
-            return self.url_template.format(href=href.replace('"', '%22'), text=value)
-        self.add_formatter('url', _render_url, replace_links=False, replace_cosmetic=False)
+            if "://" not in href and _domain_re.match(href):
+                href = "http://" + href
+            return self.url_template.format(href=href.replace('"', "%22"), text=value)
+
+        self.add_formatter("url", _render_url, replace_links=False, replace_cosmetic=False)
 
     def _replace(self, data, replacements):
         """
@@ -289,13 +316,13 @@ class Parser (object):
         return a list of NEWLINE and DATA tokens such that if you concatenate
         their data, you will have the original string.
         """
-        parts = data.split('\n')
+        parts = data.split("\n")
         tokens = []
         for num, part in enumerate(parts):
             if part:
                 tokens.append((self.TOKEN_DATA, None, None, part))
             if num < (len(parts) - 1):
-                tokens.append((self.TOKEN_NEWLINE, None, None, '\n'))
+                tokens.append((self.TOKEN_NEWLINE, None, None, "\n"))
         return tokens
 
     def _parse_opts(self, data):
@@ -314,8 +341,8 @@ class Parser (object):
         opts = CaseInsensitiveDict()
         in_value = False
         in_quote = False
-        attr = ''
-        value = ''
+        attr = ""
+        value = ""
         attr_done = False
         stripped = data.strip()
         ls = len(stripped)
@@ -325,7 +352,7 @@ class Parser (object):
             ch = stripped[pos]
             if in_value:
                 if in_quote:
-                    if ch == '\\' and ls > pos + 1 and stripped[pos + 1] in ('\\', '"', "'"):
+                    if ch == "\\" and ls > pos + 1 and stripped[pos + 1] in ("\\", '"', "'"):
                         value += stripped[pos + 1]
                         pos += 1
                     elif ch == in_quote:
@@ -333,27 +360,27 @@ class Parser (object):
                         in_value = False
                         if attr:
                             opts[attr] = value.strip()
-                        attr = ''
-                        value = ''
+                        attr = ""
+                        value = ""
                     else:
                         value += ch
                 else:
                     if ch in ('"', "'"):
                         in_quote = ch
-                    elif ch == ' ' and data.find('=', pos + 1) > 0:
+                    elif ch == " " and data.find("=", pos + 1) > 0:
                         # If there is no = after this, the value may accept spaces.
                         opts[attr] = value.strip()
-                        attr = ''
-                        value = ''
+                        attr = ""
+                        value = ""
                         in_value = False
                     else:
                         value += ch
             else:
-                if ch == '=':
+                if ch == "=":
                     in_value = True
                     if name is None:
                         name = attr
-                elif ch == ' ':
+                elif ch == " ":
                     attr_done = True
                 else:
                     if attr_done:
@@ -361,8 +388,8 @@ class Parser (object):
                             if name is None:
                                 name = attr
                             else:
-                                opts[attr] = ''
-                        attr = ''
+                                opts[attr] = ""
+                        attr = ""
                         attr_done = False
                     attr += ch
             pos += 1
@@ -379,18 +406,18 @@ class Parser (object):
         parse any options and return a tuple of the form:
             (valid, tag_name, closer, options)
         """
-        if not tag.startswith(self.tag_opener) or not tag.endswith(self.tag_closer) or ('\n' in tag) or ('\r' in tag):
+        if not tag.startswith(self.tag_opener) or not tag.endswith(self.tag_closer) or ("\n" in tag) or ("\r" in tag):
             return (False, tag, False, None)
-        tag_name = tag[len(self.tag_opener):-len(self.tag_closer)].strip()
+        tag_name = tag[len(self.tag_opener) : -len(self.tag_closer)].strip()
         if not tag_name:
             return (False, tag, False, None)
         closer = False
         opts = {}
-        if tag_name[0] == '/':
+        if tag_name[0] == "/":
             tag_name = tag_name[1:]
             closer = True
         # Parse options inside the opening tag, if needed.
-        if (('=' in tag_name) or (' ' in tag_name)) and not closer:
+        if (("=" in tag_name) or (" " in tag_name)) and not closer:
             tag_name, opts = self._parse_opts(tag_name)
         return (True, tag_name.strip().lower(), closer, opts)
 
@@ -405,7 +432,7 @@ class Parser (object):
         ltc = len(self.tag_closer)
         for i in xrange(start + 1, len(data)):
             ch = data[i]
-            if ch == '=':
+            if ch == "=":
                 quotable = True
             if ch in ('"', "'"):
                 if quotable and not in_quote:
@@ -413,9 +440,9 @@ class Parser (object):
                 elif in_quote == ch:
                     in_quote = False
                     quotable = False
-            if not in_quote and data[i:i + lto] == self.tag_opener:
+            if not in_quote and data[i : i + lto] == self.tag_opener:
                 return i, False
-            if not in_quote and data[i:i + ltc] == self.tag_closer:
+            if not in_quote and data[i : i + ltc] == self.tag_closer:
                 return i + ltc, True
         return len(data), False
 
@@ -434,7 +461,7 @@ class Parser (object):
             token_text
                 The original token text
         """
-        data = data.replace('\r\n', '\n').replace('\r', '\n')
+        data = data.replace("\r\n", "\n").replace("\r", "\n")
         pos = start = end = 0
         ld = len(data)
         tokens = []
@@ -534,10 +561,10 @@ class Parser (object):
                 return self.linker(url)
         else:
             href = url
-            if '://' not in href:
-                href = 'http://' + href
+            if "://" not in href:
+                href = "http://" + href
             # Escape quotes to avoid XSS, let the browser escape the rest.
-            return self.url_template.format(href=href.replace('"', '%22'), text=url)
+            return self.url_template.format(href=href.replace('"', "%22"), text=url)
 
     def _transform(self, data, escape_html, replace_links, replace_cosmetic, transform_newlines, **context):
         """
@@ -554,7 +581,7 @@ class Parser (object):
                 if not match:
                     break
                 # Replace any link with a token that we can substitute back in after replacements.
-                token = '{{ bbcode-link-%s }}' % len(url_matches)
+                token = "{{ bbcode-link-%s }}" % len(url_matches)
                 url_matches[token] = self._link_replace(match, **context)
                 start, end = match.span()
                 data = data[:start] + token + data[end:]
@@ -569,11 +596,20 @@ class Parser (object):
         for token, replacement in url_matches.items():
             data = data.replace(token, replacement)
         if transform_newlines:
-            data = data.replace('\n', '\r')
+            data = data.replace("\n", "\r")
         return data
 
-    def _format_tokens(self, tokens, parent, escape_html=None, replace_links=None, replace_cosmetic=None,
-            transform_newlines=True, depth=1, **context):
+    def _format_tokens(
+        self,
+        tokens,
+        parent,
+        escape_html=None,
+        replace_links=None,
+        replace_cosmetic=None,
+        transform_newlines=True,
+        depth=1,
+        **context
+    ):
         # Allow the parser defaults to be overridden when formatting.
         escape_html = self.escape_html if escape_html is None else escape_html
         replace_links = self.replace_links if replace_links is None else replace_links
@@ -590,7 +626,7 @@ class Parser (object):
                 else:
                     # First, find the extent of this tag's tokens.
                     end, consume = self._find_closing_token(tag, tokens, idx + 1)
-                    subtokens = tokens[idx + 1:end]
+                    subtokens = tokens[idx + 1 : end]
                     # If the end tag should not be consumed, back up one (after grabbing the subtokens).
                     if not consume:
                         end = end - 1
@@ -599,8 +635,14 @@ class Parser (object):
                         inner = self._format_tokens(subtokens, tag, depth=depth + 1, **context)
                     else:
                         # Otherwise, just concatenate all the token text.
-                        inner = self._transform(''.join([t[3] for t in subtokens]), tag.escape_html, tag.replace_links,
-                            tag.replace_cosmetic, tag.transform_newlines, **context)
+                        inner = self._transform(
+                            "".join([t[3] for t in subtokens]),
+                            tag.escape_html,
+                            tag.replace_links,
+                            tag.replace_cosmetic,
+                            tag.transform_newlines,
+                            **context
+                        )
                     if tag.strip:
                         inner = inner.strip()
                     # Append the rendered contents.
@@ -615,7 +657,7 @@ class Parser (object):
             elif token_type == self.TOKEN_NEWLINE:
                 # If this is a top-level newline, replace it. Otherwise, it will be replaced (if necessary)
                 # by the code above.
-                formatted.append('\r' if parent is None or parent.transform_newlines else token_text)
+                formatted.append("\r" if parent is None or parent.transform_newlines else token_text)
             elif token_type == self.TOKEN_DATA:
                 escape = escape_html if parent is None else parent.escape_html
                 links = replace_links if parent is None else parent.replace_links
@@ -623,7 +665,7 @@ class Parser (object):
                 newlines = transform_newlines if parent is None else parent.transform_newlines
                 formatted.append(self._transform(token_text, escape, links, cosmetic, newlines, **context))
             idx += 1
-        return ''.join(formatted)
+        return "".join(formatted)
 
     def format(self, data, **context):
         """
@@ -633,7 +675,7 @@ class Parser (object):
         tokens = self.tokenize(data)
         full_context = self.default_context.copy()
         full_context.update(context)
-        return self._format_tokens(tokens, None, **full_context).replace('\r', self.newline)
+        return self._format_tokens(tokens, None, **full_context).replace("\r", self.newline)
 
     def strip(self, data, strip_newlines=False):
         """
@@ -645,7 +687,7 @@ class Parser (object):
                 text.append(token_text)
             elif token_type == self.TOKEN_NEWLINE and not strip_newlines:
                 text.append(token_text)
-        return ''.join(text)
+        return "".join(text)
 
 
 g_parser = None
@@ -662,8 +704,7 @@ def render_html(input_text, **context):
     return g_parser.format(input_text, **context)
 
 
-if __name__ == '__main__':
-    import sys
+if __name__ == "__main__":  # pragma: no cover
     sys.stdout.write(render_html(sys.stdin.read()))
-    sys.stdout.write('\n')
+    sys.stdout.write("\n")
     sys.stdout.flush()
