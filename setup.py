@@ -14,7 +14,7 @@ setup(
     author="Dan Watson",
     author_email="dcwatson@gmail.com",
     url="https://github.com/dcwatson/bbcode",
-    project_urls={"Documentation": "http://bbcode.readthedocs.io/"},
+    project_urls={"Documentation": "https://dcwatson.github.io/bbcode/"},
     license="BSD",
     py_modules=["bbcode"],
     classifiers=[

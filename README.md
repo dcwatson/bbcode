@@ -8,7 +8,7 @@ http://pypi.python.org/pypi/bbcode
 https://github.com/dcwatson/bbcode
 
 **Documentation**
-http://bbcode.readthedocs.org/
+https://dcwatson.github.io/bbcode/
 
 [![CI Status](https://github.com/dcwatson/bbcode/workflows/CI/badge.svg)](https://github.com/dcwatson/bbcode/actions)
 
