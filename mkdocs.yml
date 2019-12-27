@@ -1,0 +1,7 @@
+site_name: bbcode
+nav:
+    - Home: index.md
+    - Tags: tags.md
+    - Formatters: formatters.md
+theme:
+    name: readthedocs
