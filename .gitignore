@@ -1,33 +1,12 @@
-*.py[cod]
-docs/_build/
-.DS_Store
-site
-
-# C extensions
-*.so
-
-# Packages
-*.egg
+*.pyc
 *.egg-info
-dist
-build
-eggs
-parts
-bin
-var
-sdist
-develop-eggs
-.installed.cfg
-lib
-lib64
-MANIFEST
-
-# Eclipse/PyDev/VSCode
-.project
-.pydevproject
-.settings
+__pycache__
+.DS_Store
+/dist
+/build
+/pip-wheel-metadata
 .vscode
-
-# Coverage
+.nova
 .coverage
-htmlcov
+/htmlcov
+/site

@@ -1,3 +1,9 @@
+### 1.2.0
+
+* Test on Python 3.9 - 3.13
+* Install a proper `bbcode` script in addition to being able to run `python -m bbcode`
+
+
 ### 1.1.0
 
 * Now using a `CaseInsensitiveDict` to store tag options, so they retain the source case, but can be accessed case-insensitively.
