@@ -4,4 +4,4 @@ nav:
     - Tags: tags.md
     - Formatters: formatters.md
 theme:
-    name: readthedocs
+    name: material

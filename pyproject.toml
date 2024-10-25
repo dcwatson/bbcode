@@ -33,3 +33,9 @@ path = "bbcode.py"
 
 [tool.ruff.lint]
 extend-select = ["I"]
+
+[tool.uv]
+dev-dependencies = [
+    "mkdocs-material>=9.5.42",
+    "mkdocs>=1.6.1",
+]
