@@ -1,10 +1,13 @@
+import importlib.metadata
 import re
 import sys
 from collections import OrderedDict
 from collections.abc import Mapping, MutableMapping
 
-__version__ = "1.2.0"
-__version_info__ = tuple(int(num) for num in __version__.split("."))
+__version__ = importlib.metadata.version("bbcode")
+__version_info__ = tuple(
+    int(num) if num.isdigit() else num for num in __version__.split(".")
+)
 
 
 # Adapted from http://daringfireball.net/2010/07/improved_regex_for_matching_urls
