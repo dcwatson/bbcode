@@ -37,8 +37,10 @@ class ParserTests(unittest.TestCase):
         ),
         (
             "www.apple.com blah foo.com/bar",
-            '<a rel="nofollow" href="http://www.apple.com">www.apple.com</a> blah '
-            '<a rel="nofollow" href="http://foo.com/bar">foo.com/bar</a>',
+            (
+                '<a rel="nofollow" href="http://www.apple.com">www.apple.com</a> blah '
+                '<a rel="nofollow" href="http://foo.com/bar">foo.com/bar</a>'
+            ),
         ),
         (
             "[color=red]hey now [url=apple.com]link[/url][/color]",
@@ -97,8 +99,10 @@ class ParserTests(unittest.TestCase):
         ),
         (
             "multiple http://apple.com/page link http://foo.com/foo--bar test",
-            'multiple <a rel="nofollow" href="http://apple.com/page">http://apple.com/page</a> '
-            'link <a rel="nofollow" href="http://foo.com/foo--bar">http://foo.com/foo--bar</a> test',
+            (
+                'multiple <a rel="nofollow" href="http://apple.com/page">http://apple.com/page</a> '
+                'link <a rel="nofollow" href="http://foo.com/foo--bar">http://foo.com/foo--bar</a> test'
+            ),
         ),
         (
             '[url=http://foo.com]<script>alert("XSS");</script>[/url]',
@@ -106,8 +110,10 @@ class ParserTests(unittest.TestCase):
         ),
         (
             "[url]123\" onmouseover=\"alert('Hacked');[/url]",
-            '<a rel="nofollow" href="123&quot; onmouseover=&quot;alert(&#39;Hacked&#39;);">'
-            "123&quot; onmouseover=&quot;alert(&#39;Hacked&#39;);</a>",
+            (
+                '<a rel="nofollow" href="123&quot; onmouseover=&quot;alert(&#39;Hacked&#39;);">'
+                "123&quot; onmouseover=&quot;alert(&#39;Hacked&#39;);</a>"
+            ),
         ),
         (
             "[code python]lambda code: [code] + [1, 2][/code]",
@@ -132,8 +138,10 @@ class ParserTests(unittest.TestCase):
         ("[url]vbscript:alert(1)[/url]", ""),
         (
             'http://www.google.com"onmousemove="alert(\'XSS\');"',
-            '<a rel="nofollow" href="http://www.google.com%22onmousemove=%22alert(\'XSS\')">'
-            "http://www.google.com\"onmousemove=\"alert('XSS')</a>;&quot;",
+            (
+                '<a rel="nofollow" href="http://www.google.com%22onmousemove=%22alert(\'XSS\')">'
+                "http://www.google.com\"onmousemove=\"alert('XSS')</a>;&quot;"
+            ),
         ),
         (
             "[url=data:text/html;base64,PHNjcmlwdD5hbGVydCgiMSIpOzwvc2NyaXB0Pg==]xss[/url]",
@@ -143,9 +151,11 @@ class ParserTests(unittest.TestCase):
         ('[quote author="name][clan"]blah[/quote]', "<blockquote>blah</blockquote>"),
         (
             "http://github.com/ http://example.org http://github.com/dcwatson/",
-            '<a rel="nofollow" href="http://github.com/">http://github.com/</a> '
-            '<a rel="nofollow" href="http://example.org">http://example.org</a> '
-            '<a rel="nofollow" href="http://github.com/dcwatson/">http://github.com/dcwatson/</a>',
+            (
+                '<a rel="nofollow" href="http://github.com/">http://github.com/</a> '
+                '<a rel="nofollow" href="http://example.org">http://example.org</a> '
+                '<a rel="nofollow" href="http://github.com/dcwatson/">http://github.com/dcwatson/</a>'
+            ),
         ),
         ('[b]Hello, [wor"ld][/b] out', "<strong>Hello, [wor&quot;ld]</strong> out"),
         (
@@ -201,7 +211,10 @@ class ParserTests(unittest.TestCase):
         limit_two_expected = (
             "<blockquote><blockquote>[quote]foo[/quote]</blockquote></blockquote>"
         )
-        unlimited_expected = "<blockquote><blockquote><blockquote>foo</blockquote></blockquote></blockquote>"
+        unlimited_expected = (
+            "<blockquote><blockquote><blockquote>foo"
+            "</blockquote></blockquote></blockquote>"
+        )
 
         self.assertEqual(limit_one_parser.format(src), limit_one_expected)
         self.assertEqual(limit_two_parser.format(src), limit_two_expected)

@@ -23,11 +23,12 @@ _url_re = re.compile(
 # link looks like a domain, add a http:// in front of it, otherwise leave it alone
 # (since it may be a relative path, a filename, etc).
 _domain_re = re.compile(
-    r"(?im)(?:www\d{0,3}[.]|[a-z0-9.\-]+[.](?:com|net|org|edu|biz|gov|mil|info|io|name|me|tv|us|uk|mobi))"
+    r"(?im)(?:www\d{0,3}[.]|[a-z0-9.\-]+[.]"
+    r"(?:com|net|org|edu|biz|gov|mil|info|io|name|me|tv|us|uk|mobi))"
 )
 
 
-# Taken from https://github.com/psf/requests/blob/eedd67462819f8dbf8c1c32e77f9070606605231/requests/structures.py#L15
+# Taken from python-requests
 class CaseInsensitiveDict(MutableMapping):
     def __init__(self, data=None, **kwargs):
         self._store = OrderedDict()
@@ -72,7 +73,7 @@ class CaseInsensitiveDict(MutableMapping):
         return str(dict(self.items()))
 
 
-class TagOptions(object):
+class TagOptions:
     # The name of the tag, all lowercase.
     tag_name = None
 
@@ -114,7 +115,7 @@ class TagOptions(object):
             setattr(self, attr, bool(value))
 
 
-class Parser(object):
+class Parser:
     TOKEN_TAG_START = 1
     TOKEN_TAG_END = 2
     TOKEN_NEWLINE = 3
@@ -289,10 +290,10 @@ class Parser(object):
             if "color" in options:
                 color = options["color"].strip()
             elif options:
-                color = list(options.keys())[0].strip()
+                color = next(iter(options.keys())).strip()
             else:
                 return value
-            match = re.match(r"^([a-z]+)|^(#[a-f0-9]{3,6})", color, re.I)
+            match = re.match(r"^([a-z]+)|^(#[a-f0-9]{3,6})", color, re.IGNORECASE)
             color = match.group() if match else "inherit"
             return '<span style="color:%(color)s;">%(value)s</span>' % {
                 "color": color,
@@ -355,9 +356,11 @@ class Parser(object):
         itself may also serve as an option if it is immediately followed by an equal
         sign. Here are some examples:
             quote author="Dan Watson"
-                tag_name=quote, options={'author': 'Dan Watson'}
+                tag_name=quote
+                options={'author': 'Dan Watson'}
             url="http://test.com/s.php?a=bcd efg" popup
-                tag_name=url, options={'url': 'http://test.com/s.php?a=bcd efg', 'popup': ''}
+                tag_name=url
+                options={'url': 'http://test.com/s.php?a=bcd efg', 'popup': ''}
         """
         name = None
         opts = CaseInsensitiveDict()
@@ -523,7 +526,8 @@ class Parser(object):
                         and self.drop_unrecognized
                         and tag_name not in self.recognized_tags
                     ):
-                        # If we found a valid (but unrecognized) tag and self.drop_unrecognized is True, just drop it.
+                        # If we found a valid (but unrecognized) tag and
+                        # self.drop_unrecognized is True, just drop it.
                         pass
                     else:
                         tokens.extend(self._newline_tokenize(tag))
@@ -636,13 +640,15 @@ class Parser(object):
                 match = _url_re.search(data, pos)
                 if not match:
                     break
-                # Replace any link with a token that we can substitute back in after replacements.
+                # Replace any link with a token that we can substitute back in after
+                # replacements.
                 token = "{{ bbcode-link-%s }}" % len(url_matches)
                 url_matches[token] = self._link_replace(match, **context)
                 start, end = match.span()
                 data = data[:start] + token + data[end:]
-                # To be perfectly accurate, this should probably be len(data[:start] + token), but
-                # start will work, because the token itself won't match as a URL.
+                # To be perfectly accurate, this should probably be
+                # len(data[:start] + token), but start will work, because the token
+                # itself won't match as a URL.
                 pos = start
         if escape_html:
             data = self._replace(data, self.REPLACE_ESCAPE)
@@ -687,7 +693,8 @@ class Parser(object):
                     # First, find the extent of this tag's tokens.
                     end, consume = self._find_closing_token(tag, tokens, idx + 1)
                     subtokens = tokens[idx + 1 : end]
-                    # If the end tag should not be consumed, back up one (after grabbing the subtokens).
+                    # If the end tag should not be consumed, back up one (after grabbing
+                    # the subtokens).
                     if not consume:
                         end = end - 1
                     if tag.render_embedded and depth < self.max_tag_depth:
@@ -711,7 +718,8 @@ class Parser(object):
                     formatted.append(
                         render_func(tag_name, inner, tag_opts, parent, context)
                     )
-                    # If the tag should swallow the first trailing newline, check the token after the closing token.
+                    # If the tag should swallow the first trailing newline, check the
+                    # token after the closing token.
                     if tag.swallow_trailing_newline:
                         next_pos = end + 1
                         if (
@@ -722,8 +730,8 @@ class Parser(object):
                     # Skip to the end tag.
                     idx = end
             elif token_type == self.TOKEN_NEWLINE:
-                # If this is a top-level newline, replace it. Otherwise, it will be replaced (if necessary)
-                # by the code above.
+                # If this is a top-level newline, replace it. Otherwise, it will be
+                # replaced (if necessary) by the code above.
                 formatted.append(
                     "\r" if parent is None or parent.transform_newlines else token_text
                 )
@@ -764,9 +772,9 @@ class Parser(object):
         """
         text = []
         for token_type, tag_name, tag_opts, token_text in self.tokenize(data):
-            if token_type == self.TOKEN_DATA:
-                text.append(token_text)
-            elif token_type == self.TOKEN_NEWLINE and not strip_newlines:
+            if token_type == self.TOKEN_DATA or (
+                token_type == self.TOKEN_NEWLINE and not strip_newlines
+            ):
                 text.append(token_text)
         return "".join(text)
 

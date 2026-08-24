@@ -2,9 +2,7 @@
 name = "bbcode"
 version = "1.2.0"
 description = "A pure python bbcode parser and formatter."
-authors = [
-    { name = "Dan Watson", email = "dcwatson@gmail.com" }
-]
+authors = [{ name = "Dan Watson", email = "dcwatson@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "BSD" }
@@ -28,10 +26,12 @@ requires = ["uv_build>=0.12,<0.13"]
 build-backend = "uv_build"
 
 [dependency-groups]
-dev = [
-    "mkdocs-material>=9.5.42",
-    "mkdocs>=1.6.1",
-]
+dev = ["mkdocs-material>=9.5.42", "mkdocs>=1.6.1"]
 
 [tool.ruff.lint]
 extend-select = ["I"]
+ignore = [
+    "B005",   # strip-with-multi-characters
+    "RUF059", # unused-unpacked-variable
+    "UP031",  # printf-string-formatting
+]
