@@ -8,8 +8,9 @@ have access to the parser context or parent tag, you can write a formatter funct
 def render_color(tag_name, value, options, parent, context):
     return '<span style="color:%s;">%s</span>' % (tag_name, value)
 
+
 # Installing advanced formatters.
-for color in ('red', 'blue', 'green', 'yellow', 'black', 'white'):
+for color in ("red", "blue", "green", "yellow", "black", "white"):
     parser.add_formatter(color, render_color)
 ```
 
@@ -21,13 +22,13 @@ this:
 
 ```python
 def render_quote(tag_name, value, options, parent, context):
-    author = u''
+    author = ""
     # [quote author=Somebody]
-    if 'author' in options:
-        author = options['author']
+    if "author" in options:
+        author = options["author"]
     # [quote=Somebody]
-    elif 'quote' in options:
-        author = options['quote']
+    elif "quote" in options:
+        author = options["quote"]
     # [quote Somebody]
     elif len(options) == 1:
         key, val = list(options.items())[0]
@@ -37,12 +38,13 @@ def render_quote(tag_name, value, options, parent, context):
             author = key
     # [quote Firstname Lastname]
     elif options:
-        author = ' '.join([k for k in options.keys()])
-    extra = '<small>%s</small>' % author if author else ''
-    return '<blockquote><p>%s</p>%s</blockquote>' % (value, extra)
+        author = " ".join([k for k in options.keys()])
+    extra = "<small>%s</small>" % author if author else ""
+    return "<blockquote><p>%s</p>%s</blockquote>" % (value, extra)
+
 
 # Now register our new quote tag, telling it to strip off whitespace, and the newline after the [/quote].
-parser.add_formatter('quote', render_quote, strip=True, swallow_trailing_newline=True)
+parser.add_formatter("quote", render_quote, strip=True, swallow_trailing_newline=True)
 ```
 
 ## Custom Tag Options

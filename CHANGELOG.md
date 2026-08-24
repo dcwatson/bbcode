@@ -1,3 +1,8 @@
+### 1.3.0
+
+* Lower the `max_tag_depth` default to avoid `RecursionError`s on pathological cases
+
+
 ### 1.2.0
 
 * Test on Python 3.9 - 3.13

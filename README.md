@@ -33,22 +33,25 @@ Basic Usage
 ```python
 # Using the default parser.
 import bbcode
+
 html = bbcode.render_html(text)
 
 # Installing simple formatters.
 parser = bbcode.Parser()
-parser.add_simple_formatter('hr', '<hr />', standalone=True)
-parser.add_simple_formatter('sub', '<sub>%(value)s</sub>')
-parser.add_simple_formatter('sup', '<sup>%(value)s</sup>')
+parser.add_simple_formatter("hr", "<hr />", standalone=True)
+parser.add_simple_formatter("sub", "<sub>%(value)s</sub>")
+parser.add_simple_formatter("sup", "<sup>%(value)s</sup>")
+
 
 # A custom render function.
 def render_color(tag_name, value, options, parent, context):
     return '<span style="color:%s;">%s</span>' % (tag_name, value)
 
+
 # Installing advanced formatters.
-for color in ('red', 'blue', 'green', 'yellow', 'black', 'white'):
+for color in ("red", "blue", "green", "yellow", "black", "white"):
     parser.add_formatter(color, render_color)
 
 # Calling format with context.
-html = parser.format(text, somevar='somevalue')
+html = parser.format(text, somevar="somevalue")
 ```

@@ -4,6 +4,7 @@ If you need only the [built-in tags](tags.md), you can simply use the global def
 
 ```python
 import bbcode
+
 html = bbcode.render_html(text)
 ```
 
@@ -12,7 +13,9 @@ may look like:
 
 ```python
 parser = bbcode.Parser()
-parser.add_simple_formatter('wiki', '<a href="http://wikipedia.org/wiki/%(value)s">%(value)s</a>')
+parser.add_simple_formatter(
+    "wiki", '<a href="http://wikipedia.org/wiki/%(value)s">%(value)s</a>'
+)
 ```
 
 
@@ -51,12 +54,15 @@ whether you set ``linker_takes_context``), and might look like this:
 ```python
 def my_linker(url):
     href = url
-    if '://' not in href:
-        href = 'http://' + href
+    if "://" not in href:
+        href = "http://" + href
     return '<a href="%s">%s</a>' % (href, url)
 
+
 parser = bbcode.Parser(linker=my_linker)
-parser.format('www.apple.com') # returns <a href="http://www.apple.com">www.apple.com</a>
+parser.format(
+    "www.apple.com"
+)  # returns <a href="http://www.apple.com">www.apple.com</a>
 ```
 
 For an example of a linker that may want the render context, imagine a linker that routes all clicks through a local
@@ -65,11 +71,16 @@ URL:
 ```python
 def my_linker(url, context):
     href = url
-    if '://' not in href:
-        href = 'http://' + href
-    redir_url = context['request'].build_absolute_url('/redirect/') + '?to=' + urllib.quote(href, safe='/')
+    if "://" not in href:
+        href = "http://" + href
+    redir_url = (
+        context["request"].build_absolute_url("/redirect/")
+        + "?to="
+        + urllib.quote(href, safe="/")
+    )
     return '<a href="%s">%s</a>' % (redir_url, url)
 
+
 parser = bbcode.Parser(linker=my_linker, linker_takes_context=True)
-parser.format('www.apple.com', request=request)
+parser.format("www.apple.com", request=request)
 ```
