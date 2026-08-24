@@ -1,12 +1,8 @@
-### 1.3.0
-
-* Lower the `max_tag_depth` default to avoid `RecursionError`s on pathological cases
-
-
 ### 1.2.0
 
 * Test on Python 3.9 - 3.13
 * Install a proper `bbcode` script in addition to being able to run `python -m bbcode`
+* Lower the `max_tag_depth` default to avoid `RecursionError`s on pathological cases
 
 
 ### 1.1.0
