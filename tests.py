@@ -207,6 +207,15 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(limit_two_parser.format(src), limit_two_expected)
         self.assertEqual(unlimited_parser.format(src), unlimited_expected)
 
+        # Test when nested tags exceed DEFAULT_MAX_TAG_DEPTH
+        result = unlimited_parser.format("[b]" * 1000 + "foo" + "[/b]" * 1000)
+        self.assertEqual(
+            result.count("<strong>"), unlimited_parser.DEFAULT_MAX_TAG_DEPTH
+        )
+        self.assertEqual(
+            result.count("[b]"), 1000 - unlimited_parser.DEFAULT_MAX_TAG_DEPTH
+        )
+
     def test_parse_opts(self):
         tag_name, opts = self.parser._parse_opts(
             'url="http://test.com/s.php?a=bcd efg"  popup'

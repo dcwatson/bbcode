@@ -119,6 +119,7 @@ class Parser(object):
     TOKEN_TAG_END = 2
     TOKEN_NEWLINE = 3
     TOKEN_DATA = 4
+    DEFAULT_MAX_TAG_DEPTH = 100
 
     REPLACE_ESCAPE = (
         ("&", "&amp;"),
@@ -163,7 +164,7 @@ class Parser(object):
         self.replace_links = replace_links
         self.linker = linker
         self.linker_takes_context = linker_takes_context
-        self.max_tag_depth = max_tag_depth or sys.getrecursionlimit()
+        self.max_tag_depth = max_tag_depth or self.DEFAULT_MAX_TAG_DEPTH
         self.url_template = url_template
         self.default_context = default_context or {}
         if install_defaults:
