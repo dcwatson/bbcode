@@ -321,6 +321,21 @@ class ParserTests(unittest.TestCase):
             num = len(bbcode._url_re.findall(line))
             self.assertEqual(num, 1, 'Found %d links in "%s"' % (num, line.strip()))
 
+    def test_many_links(self):
+        # Every link in a post with a lot of them should still be replaced, and the
+        # placeholder tokens used while escaping should not leak into the output.
+        src = "http://a.co/x " * 500
+        dst = bbcode.render_html(src)
+        self.assertEqual(dst.count('href="http://a.co/x"'), 500)
+        self.assertNotIn("bbcode-link", dst)
+
+    def test_link_token_in_source(self):
+        # Text that happens to look like an internal placeholder is left alone when
+        # there is no link to substitute for it.
+        self.assertEqual(
+            bbcode.render_html("{{ bbcode-link-0 }}"), "{{ bbcode-link-0 }}"
+        )
+
     def test_unicode(self):
         src = "[center]ƒünk¥ • §tüƒƒ[/center]"
         dst = '<div style="text-align:center;">ƒünk¥ • §tüƒƒ</div>'

@@ -27,6 +27,10 @@ _domain_re = re.compile(
     r"(?:com|net|org|edu|biz|gov|mil|info|io|name|me|tv|us|uk|mobi))"
 )
 
+# Matches the placeholder tokens used to hold links aside while escaping and cosmetic
+# replacement happen, so they can all be substituted back in a single pass.
+_link_token_re = re.compile(r"\{\{ bbcode-link-\d+ \}\}")
+
 
 # Taken from python-requests
 class CaseInsensitiveDict(MutableMapping):
@@ -634,29 +638,25 @@ class Parser:
         if self.replace_links and replace_links:
             # If we're replacing links in the text (i.e. not those in [url] tags) then
             # we need to be careful to pull them out before doing any escaping or
-            # cosmetic replacement.
-            pos = 0
-            while True:
-                match = _url_re.search(data, pos)
-                if not match:
-                    break
-                # Replace any link with a token that we can substitute back in after
-                # replacements.
+            # cosmetic replacement. Each link is swapped for a token here and put back
+            # at the end. Both halves are single passes: doing it a match at a time
+            # rebuilt the whole string once per link, so a post with many links cost
+            # time quadratic in its length.
+            def _tokenize_link(match):
                 token = "{{ bbcode-link-%s }}" % len(url_matches)
                 url_matches[token] = self._link_replace(match, **context)
-                start, end = match.span()
-                data = data[:start] + token + data[end:]
-                # To be perfectly accurate, this should probably be
-                # len(data[:start] + token), but start will work, because the token
-                # itself won't match as a URL.
-                pos = start
+                return token
+
+            data = _url_re.sub(_tokenize_link, data)
         if escape_html:
             data = self._replace(data, self.REPLACE_ESCAPE)
         if replace_cosmetic:
             data = self._replace(data, self.REPLACE_COSMETIC)
         # Now put the replaced links back in the text.
-        for token, replacement in url_matches.items():
-            data = data.replace(token, replacement)
+        if url_matches:
+            data = _link_token_re.sub(
+                lambda match: url_matches.get(match.group(0), match.group(0)), data
+            )
         if transform_newlines:
             data = data.replace("\n", "\r")
         return data
